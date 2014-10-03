@@ -9,26 +9,21 @@ namespace PageCache
 {
     public class CacheService
     {
-
-
         Setting.Setting setting;
 
         Store.MemoryDataList memoryDataList = null;
+
         Store.LastReadDataList lastReadDataList = null;
+
         Store.StoreDataList storeDataList = null;
 
-
         RequestQueue requestQueue = null;
-
-
 
         Common.HttpHelper httpHelper;
 
         Common.Log errorLog = null;
+
         Common.Log accessLog = null;
-
-
-
         public CacheService(Setting.Setting setting)
         {
             this.setting = setting;
@@ -62,8 +57,6 @@ namespace PageCache
                 this.accessLog = new Common.Log(config.AccessLogPath);
             }
         }
-
-
         public void Process(HttpContext context)
         {
             var rule = setting.Rules.Get(context);
@@ -93,84 +86,49 @@ namespace PageCache
                     {
                         context.Response.Write("The system is busy now. Please try later.");
                     }
-                    context.ApplicationInstance.CompleteRequest();
 
+                    context.ApplicationInstance.CompleteRequest();
                     requestQueue.Out(info);
                 }
             }
         }
-
-
-
-
         bool EchoData(RequestInfo info)
         {
             Store.StoreData data = null;
-
-            Store.IStore store = null;
             //强制刷新缓存
             bool hasRefreshKey = info.Context.Request.RawUrl.IndexOf(setting.Config.RefreshKey) >= 0
                                     || info.Context.Request.Headers.AllKeys.Contains(setting.Config.RefreshKey);
-
 
             //没有强制刷新的时候 从缓存读取
             #region 从缓存读取
             if (!hasRefreshKey)
             {
-
-                if (data == null)
+                //尝试从内存中读缓存
+                if (info.Rule.ConfigRule.MemoryEnable)
                 {
-                    //尝试从内存中读缓存
-                    if (info.Rule.ConfigRule.MemoryEnable)
+                    data = memoryDataList.Get(info.Type, info.Key);
+                    if (data != null)
                     {
-                        data = memoryDataList.Get(info.Type, info.Key);
-                    }
-                }
-
-
-                if (data == null)
-                {
-                    //尝试从最后的数据列中读取缓存
-                    data = lastReadDataList.Get(info.Type, info.Key);
-                }
-
-
-                if (data == null)
-                {
-                    //尝试从StoreDataList 中读取缓存
-                    data = storeDataList.Get(info.Type, info.Key);
-                }
-
-
-                if (data == null)
-                {
-
-                    store = info.Store;
-
-                    if (store != null)
-                    {
-                        data = store.GetData(info.Type, info.Key);
-
-                        //尝试输出缓存
-                        if (data != null)
+                        if (setting.Config.ReadOnly)
                         {
-
-                            lastReadDataList.Add(data);
-
-                            //如果启用了内存并且达到并发数量时,使用内存缓存
-                            if (info.Rule.ConfigRule.MemoryEnable)
+                            if (EchoData(info.Context, data))
                             {
-                                int n = requestQueue.GetCount(info);
+                                return true;
+                            }
+                        }
 
-                                if (n >= setting.Config.MemoryRule.QueueCount)
-                                {
-                                    memoryDataList.Add(data);
-                                }
+                        if (data.ExpiresAbsolute > DateTime.Now)
+                        {
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
                             }
                         }
                     }
                 }
 
+                //尝试从最后的数据列中读取缓存
+                data = lastReadDataList.Get(info.Type, info.Key);
 
                 if (data != null)
                 {
@@ -189,18 +147,73 @@ namespace PageCache
                             return true;
                         }
                     }
-                    else
+                }
+
+                //尝试从StoreDataList 中读取缓存
+                data = storeDataList.Get(info.Type, info.Key);
+
+                if (data != null)
+                {
+                    if (setting.Config.ReadOnly)
                     {
-                        if (store != null)
+                        if (EchoData(info.Context, data))
                         {
-                            store.Delete(info.Type, info.Key);
+                            return true;
+                        }
+                    }
+
+                    if (data.ExpiresAbsolute > DateTime.Now)
+                    {
+                        if (EchoData(info.Context, data))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                //Store
+                if (info.Store != null)
+                {
+                    data = info.Store.GetData(info.Type, info.Key);
+
+                    if (data != null)
+                    {
+                        lastReadDataList.Add(data);
+                        //如果启用了内存并且达到并发数量时,使用内存缓存
+                        if (info.Rule.ConfigRule.MemoryEnable)
+                        {
+                            int n = requestQueue.GetCount(info);
+
+                            if (n >= setting.Config.MemoryRule.QueueCount)
+                            {
+                                memoryDataList.Add(data);
+                            }
+                        }
+
+                        if (setting.Config.ReadOnly)
+                        {
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
+                        }
+
+                        if (data.ExpiresAbsolute > DateTime.Now)
+                        {
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            info.Store.Delete(info.Type, info.Key);
                         }
                     }
                 }
             }
 
             #endregion
-
 
             Store.StoreData newdata = null;
 
@@ -215,11 +228,9 @@ namespace PageCache
             }
 
             return false;
-
         }
 
         Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
-
         bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
         {
             outdata = null;
@@ -231,9 +242,11 @@ namespace PageCache
             if (creatingDataList.ContainsKey(creatingKey))
             {
                 olddata = creatingDataList[creatingKey];
+
                 if (olddata != null)
                 {
                     outdata = olddata;
+
                     return false;
                 }
             }
@@ -285,8 +298,6 @@ namespace PageCache
 
             return createResult;
         }
-
-
         Store.StoreData CreateData(RequestInfo info)
         {
             try
@@ -310,10 +321,8 @@ namespace PageCache
                         }
 
                         return data;
-
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -328,19 +337,13 @@ namespace PageCache
 
                     errorLog.Write(exBuilder.ToString());
                 }
-
             }
-
 
             return null;
         }
-
-
         bool EchoData(HttpContext context, Store.StoreData data)
         {
-
             bool echoGZip = IsClientProvidedGZip(context);
-
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
 
@@ -401,13 +404,8 @@ namespace PageCache
                 memoryStream.Dispose();
             }
 
-
-
-
             return true;
-
         }
-
         bool IsClientProvidedGZip(HttpContext context)
         {
             string client_accept_encoding = context.Request.Headers.Get("Accept-Encoding") ?? string.Empty;
@@ -418,7 +416,6 @@ namespace PageCache
             }
             return false;
         }
-
         void EchoBrowserCache(HttpContext context, Store.StoreDataInfo inf)
         {
             if (inf != null)
@@ -434,7 +431,6 @@ namespace PageCache
                 context.Response.Cache.SetLastModified(inf.CreatedDate);
             }
         }
-
         void EchoContentEncodingCharset(HttpContext context, string contentType)
         {
             if (!string.IsNullOrEmpty(contentType))
@@ -446,10 +442,9 @@ namespace PageCache
                 {
                     string charset = contentType.Substring(charsetValueIndex);
 
-
                     context.Response.ContentEncoding = Encoding.GetEncoding(charset);
-                    context.Response.Charset = charset;
 
+                    context.Response.Charset = charset;
                 }
             }
         }
@@ -479,7 +474,6 @@ namespace PageCache
 
             return false;
         }
-
         bool BeFilterHeader(string headerKey)
         {
             string headersFilters = this.setting.Config.HeadersFilters;
@@ -509,7 +503,6 @@ namespace PageCache
 
             return false;
         }
-
         int GetStatusCacheSeconds(int statusCode)
         {
             int returnCacheSecond = -1;
@@ -566,21 +559,15 @@ namespace PageCache
 
             }
 
-
             return returnCacheSecond;
         }
-
         byte[] GetRequestHeadersData(RequestInfo info)
         {
-
-
             Uri uri = new Uri(info.UriString);
 
             StringBuilder requestStringBuilder = new StringBuilder();
 
-
             requestStringBuilder.AppendFormat("{0} {1} {2}/1.1\r\n", info.Context.Request.HttpMethod.ToUpper(), uri.ToString(), uri.Scheme.ToUpper());
-
 
             if (info.HostAddress.Port == 80)
             {
@@ -626,9 +613,7 @@ namespace PageCache
             byte[] rHeadersData = Encoding.ASCII.GetBytes(requestString);
 
             return rHeadersData;
-
         }
-
         Store.StoreData ConvertToStoreData(RequestInfo info, Common.HttpData httpdata)
         {
 
@@ -637,9 +622,7 @@ namespace PageCache
             data.Key = info.Key;
             data.Type = info.Type;
 
-
             string data_accept_encoding = httpdata.Headers["Content-Encoding"] ?? string.Empty;
-
 
             bool echoGZip = IsClientProvidedGZip(info.Context);
             if (data_accept_encoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -665,7 +648,6 @@ namespace PageCache
                 }
             }
 
-
             if (httpdata.Headers.AllKeys.Contains("Server"))
             {
                 httpdata.Headers.Remove("Server");
@@ -685,7 +667,6 @@ namespace PageCache
             {
                 httpdata.Headers.Remove("Date");
             }
-
 
             if (echoGZip)
             {
@@ -723,7 +704,6 @@ namespace PageCache
 
             //设置了自定义缓存时间，并且状态值为200
 
-
             //正确的状态值
             if (httpdata.StatusCode >= 100 && httpdata.StatusCode < 400)
             {
@@ -755,13 +735,7 @@ namespace PageCache
                 }
             }
 
-
             return data;
-
-
-
         }
-
-
     }
 }

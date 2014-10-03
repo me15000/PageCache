@@ -6,16 +6,11 @@ namespace PageCache
 {
     public class CacheModule : IHttpModule
     {
-
-
-
         CacheService service = null;
-
         public void Init(HttpApplication context)
         {
             if (InitSetting())
             {
-
                 context.BeginRequest += new EventHandler(OnBeginRequest);
             }
         }
@@ -38,7 +33,6 @@ namespace PageCache
                 return true;
             }
 
-
             return false;
         }
 
@@ -52,8 +46,6 @@ namespace PageCache
 
 
             service.Process(context);
-
-            
         }
 
 

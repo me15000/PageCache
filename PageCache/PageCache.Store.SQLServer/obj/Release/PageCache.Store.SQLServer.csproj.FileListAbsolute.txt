@@ -1,0 +1,7 @@
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.Store.SQLServer.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.Store.SQLServer.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.csprojResolveAssemblyReference.cache
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.pdb
