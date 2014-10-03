@@ -219,7 +219,7 @@ namespace PageCache
 
             TryCreateData(info, data, out newdata);
 
-            if (data != null)
+            if (newdata != null)
             {
                 if (EchoData(info.Context, newdata))
                 {
