@@ -94,7 +94,10 @@ namespace PageCache
 
             info.HostAddress = rule.Host.GetHostAddress();
 
-            info.Headers["Accept-Encoding"] = context.Request.Headers.Get("Accept-Encoding");
+
+            string ae = context.Request.Headers.Get("Accept-Encoding") ?? string.Empty;
+
+            info.Headers["Accept-Encoding"] = ae.IndexOf("gzip") >= 0 ? "gzip" : string.Empty;
 
 
             info.Store = rule.GetStore();

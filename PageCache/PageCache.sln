@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio Express 2012 for Web
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache", "PageCache\PageCache.csproj", "{D2CFFDF0-EA50-4590-934D-7E5C127F4447}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.MongoDB", "PageCache.Store.MongoDB\PageCache.Store.MongoDB.csproj", "{13F0DCAF-1E39-46B4-8F61-6464CC80263D}"
@@ -33,6 +31,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PageCacheWeb(1)", "http://l
 		SlnRelativePath = "PageCacheWeb\"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.SQLite", "PageCache.Store.SQLite\PageCache.Store.SQLite.csproj", "{0928B91C-6803-4FD5-A77D-35B8972E31B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +59,10 @@ Global
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{0928B91C-6803-4FD5-A77D-35B8972E31B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0928B91C-6803-4FD5-A77D-35B8972E31B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0928B91C-6803-4FD5-A77D-35B8972E31B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0928B91C-6803-4FD5-A77D-35B8972E31B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

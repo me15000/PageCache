@@ -50,3 +50,10 @@ C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.dll
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.Store.MongoDB.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.Store.MongoDB.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.pdb

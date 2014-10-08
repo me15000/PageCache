@@ -40,3 +40,10 @@ C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLServer\bi
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.csprojResolveAssemblyReference.cache
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.dll
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\bin\Debug\PageCache.Store.SQLServer.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\bin\Debug\PageCache.Store.SQLServer.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\bin\Debug\PageCache.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\bin\Debug\PageCache.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.csprojResolveAssemblyReference.cache
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Debug\PageCache.Store.SQLServer.pdb
