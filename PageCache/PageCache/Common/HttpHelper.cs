@@ -25,6 +25,7 @@ namespace PageCache.Common
         public NameValueCollection Headers
         {
             get { return headers; }
+            set { headers = value; }
         }
 
         public string HeadersStrings { get; set; }
@@ -405,10 +406,7 @@ namespace PageCache.Common
 
             try
             {
-
                 socket.Connect(address.Address, address.Port);
-
-
                 socket.ReceiveTimeout = receiveTimeout;
                 socket.SendTimeout = sendTimeout;
                 socket.Send(headersData);
@@ -461,16 +459,28 @@ namespace PageCache.Common
 
                 string headersStringText = headersStringBuilder.ToString();
 
-                HttpData info = new HttpData();
 
                 HttpDataInfo hhs = GetHeaders(headersStringText);
 
-                info = (HttpData)hhs;
+                HttpData info = new HttpData()
+                {
+
+                    HeadersStrings = hhs.HeadersStrings
+                    ,
+                    Scheme = hhs.Scheme
+                    ,
+                    StatusCode = hhs.StatusCode
+                    ,
+                    StatusDescription = hhs.StatusDescription
+                    ,
+                    Headers = hhs.Headers
+
+                };
 
 
                 if (hhs == null)
                 {
-                    throw new Exception("ERROR : headers is null");
+                    throw new Exception("hhs is null");
                 }
 
 
@@ -549,7 +559,15 @@ namespace PageCache.Common
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Disconnect(true);
 
+                if (info.BodyData == null)
+                {
+                    return null;
+                }
+
                 return info;
+
+
+
             }
             catch (Exception ex)
             {

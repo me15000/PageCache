@@ -97,7 +97,7 @@ namespace PageCache
 
             string ae = context.Request.Headers.Get("Accept-Encoding") ?? string.Empty;
 
-            info.Headers["Accept-Encoding"] = ae.IndexOf("gzip") >= 0 ? "gzip" : string.Empty;
+            info.Headers["Accept-Encoding"] = ae.IndexOf("gzip") >= 0 ? ae : string.Empty;
 
 
             info.Store = rule.GetStore();

@@ -55,9 +55,29 @@ namespace PageCache.Store
 
 
 
-            StoreDataEntity entity = (StoreDataEntity)data;
+            StoreDataEntity entity = new StoreDataEntity
+            {
 
-            entity.Store = store;
+                BodyData = data.BodyData
+                ,
+                CreatedDate = data.CreatedDate
+                ,
+                ExpiresAbsolute = data.ExpiresAbsolute
+                ,
+                HeadersData = data.HeadersData
+                ,
+                Key = data.Key
+                ,
+                Seconds = data.Seconds
+                ,
+                Store = store
+                ,
+                Type = data.Type
+
+            };
+
+
+          
 
             this.datalist.Add(entity);
 

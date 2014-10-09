@@ -217,7 +217,20 @@ namespace PageCache
 
             Store.StoreData newdata = null;
 
-            TryCreateData(info, data, out newdata);
+            if (TryCreateData(info, data, out newdata))
+            {
+                if (accessLog != null)
+                {
+                    accessLog.Write("TryCreateData success");
+                }
+            }
+            else
+            {
+                if (errorLog != null)
+                {
+                    errorLog.Write("TryCreateData failed");
+                }
+            }
 
             if (newdata != null)
             {
@@ -298,11 +311,17 @@ namespace PageCache
 
             return createResult;
         }
+
+
         Store.StoreData CreateData(RequestInfo info)
         {
+            byte[] rheadersData =  GetRequestHeadersData(info);
+
             try
             {
-                Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, GetRequestHeadersData(info));
+            
+
+                Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, rheadersData);
 
                 if (httpdata != null)
                 {
@@ -321,6 +340,28 @@ namespace PageCache
                         }
 
                         return data;
+                    }
+                    else
+                    {
+                        if (errorLog != null)
+                        {
+                            StringBuilder exBuilder = new StringBuilder();
+                            exBuilder.AppendLine("CreateData ConvertToStoreData is null");
+                            exBuilder.AppendLine(RequestInfo.ToString(info));
+
+                            errorLog.Write(exBuilder.ToString());
+                        }
+                    }
+                }
+                else
+                {
+                    if (errorLog != null)
+                    {
+                        StringBuilder exBuilder = new StringBuilder();
+                        exBuilder.AppendLine("CreateData httpHelper GetHttpData is null");
+                        exBuilder.AppendLine(RequestInfo.ToString(info));
+
+                        errorLog.Write(exBuilder.ToString());
                     }
                 }
             }
@@ -374,47 +415,51 @@ namespace PageCache
             var response = context.Response;
             response.BufferOutput = false;
 
-
-            using (var memoryStream = new MemoryStream(data.BodyData))
+            if (data.BodyData != null)
             {
-                using (var outputStream = response.OutputStream)
+                using (var memoryStream = new MemoryStream(data.BodyData))
                 {
-
-                    byte[] buffer = new byte[256];
-                    int count;
-
-                    try
+                    using (var outputStream = response.OutputStream)
                     {
-                        while ((count = memoryStream.Read(buffer, 0, buffer.Length)) != 0)
+
+                        byte[] buffer = new byte[256];
+                        int count;
+
+                        try
                         {
-                            outputStream.Write(buffer, 0, count);
-
-                            if (response.IsClientConnected)
+                            while ((count = memoryStream.Read(buffer, 0, buffer.Length)) != 0)
                             {
-                                outputStream.Flush();
-                            }
-                            else
-                            {
-                                break;
-                            }
+                                outputStream.Write(buffer, 0, count);
 
+                                if (response.IsClientConnected)
+                                {
+                                    outputStream.Flush();
+                                }
+                                else
+                                {
+                                    break;
+                                }
+
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (errorLog != null)
+                        catch (Exception ex)
                         {
-                            errorLog.Write(context.Request.Url.ToString() + "\r\n\r\n" + ex.Message);
+                            if (errorLog != null)
+                            {
+                                errorLog.Write(context.Request.Url.ToString() + "\r\n\r\n" + ex.Message);
+                            }
                         }
+
+                        outputStream.Close();
+                        outputStream.Dispose();
                     }
 
-                    outputStream.Close();
-                    outputStream.Dispose();
+                    memoryStream.Close();
+                    memoryStream.Dispose();
                 }
 
-                memoryStream.Close();
-                memoryStream.Dispose();
             }
+
 
             return true;
         }
@@ -579,7 +624,10 @@ namespace PageCache
 
             StringBuilder requestStringBuilder = new StringBuilder();
 
-            requestStringBuilder.AppendFormat("{0} {1} {2}/1.1\r\n", info.Context.Request.HttpMethod.ToUpper(), uri.ToString(), uri.Scheme.ToUpper());
+            requestStringBuilder.AppendFormat("{0} {1} {2}/1.1\r\n"
+                , info.Context.Request.HttpMethod.ToUpper()
+                , uri.ToString(), uri.Scheme.ToUpper());
+
 
             if (info.HostAddress.Port == 80)
             {
@@ -622,10 +670,17 @@ namespace PageCache
 
             string requestString = requestStringBuilder.ToString();
 
-            byte[] rHeadersData = Encoding.ASCII.GetBytes(requestString);
+            if (accessLog != null)
+            {
+                accessLog.Write(requestString);
+            }
+
+            byte[] rHeadersData = Encoding.ASCII.GetBytes(requestString);            
 
             return rHeadersData;
         }
+
+
         Store.StoreData ConvertToStoreData(RequestInfo info, Common.HttpData httpdata)
         {
 
@@ -637,28 +692,40 @@ namespace PageCache
             string data_accept_encoding = httpdata.Headers["Content-Encoding"] ?? string.Empty;
 
             bool echoGZip = IsClientProvidedGZip(info.Context);
-            if (data_accept_encoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0)
+
+            if (httpdata.BodyData != null)
             {
-                if (echoGZip)
+                if (data_accept_encoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    data.BodyData = httpdata.BodyData;
+                    if (echoGZip)
+                    {
+                        data.BodyData = httpdata.BodyData;
+                    }
+                    else
+                    {
+                        data.BodyData = Common.GZip.GZipDecompress(httpdata.BodyData);
+                    }
                 }
                 else
                 {
-                    data.BodyData = Common.GZip.GZipDecompress(httpdata.BodyData);
+                    if (echoGZip)
+                    {
+                        data.BodyData = Common.GZip.GZipCompress(httpdata.BodyData);
+                    }
+                    else
+                    {
+                        data.BodyData = httpdata.BodyData;
+                    }
                 }
             }
             else
             {
-                if (echoGZip)
+                if (errorLog != null)
                 {
-                    data.BodyData = Common.GZip.GZipCompress(httpdata.BodyData);
-                }
-                else
-                {
-                    data.BodyData = httpdata.BodyData;
+                    errorLog.Write("ConvertToStoreData httpdata.BodyData is null ");
                 }
             }
+
 
             if (httpdata.Headers.AllKeys.Contains("Server"))
             {

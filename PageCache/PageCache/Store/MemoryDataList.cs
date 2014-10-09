@@ -49,12 +49,16 @@ namespace PageCache.Store
             this.clearSeconds = clearSeconds;
             this.removeSeconds = removeSeconds;
 
-            
+
         }
 
         public StoreData Get(string type, string key)
         {
-            return Find(type, key);
+            MemoryDataEntity entity = Find(type, key);
+
+            entity.LastReadDate = DateTime.Now;
+
+            return entity;
         }
 
 
@@ -70,7 +74,29 @@ namespace PageCache.Store
                 this.datalist.Remove(foundEntity);
             }
 
-            MemoryDataEntity entity = (MemoryDataEntity)data;
+            //MemoryDataEntity entity = (MemoryDataEntity)data;
+
+            MemoryDataEntity entity = new MemoryDataEntity
+            {
+
+                BodyData = data.BodyData
+                ,
+                CreatedDate = data.CreatedDate
+                ,
+                ExpiresAbsolute = data.ExpiresAbsolute
+                ,
+                HeadersData = data.HeadersData
+                ,
+                Key = data.Key
+                ,
+                Seconds = data.Seconds
+                ,
+                Type = data.Type
+                ,
+                LastReadDate = DateTime.Now
+
+            };
+
 
             this.datalist.Add(entity);
 
