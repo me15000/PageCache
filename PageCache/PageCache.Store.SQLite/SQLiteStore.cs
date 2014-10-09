@@ -36,7 +36,7 @@ namespace PageCache.Store.SQLite
 
         string getTableName(string key)
         {
-            return string.Concat(key[1], key[2]);
+            return string.Concat("data_", key[1], key[2]);
         }
 
 
@@ -47,7 +47,7 @@ namespace PageCache.Store.SQLite
 
         void CreateDataBase(int i)
         {
-            string formatsql = @"CREATE TABLE ""data_{0}"" (""KEY""  TEXT(32),""Type""  TEXT(30),""CreatedDate""  INTEGER,""ExpiresAbsolute""  INTEGER,""Seconds""  INTEGER);";
+            string formatsql = @"CREATE TABLE ""data_{0}"" (""KEY""  TEXT(32) NOT NULL,""Type""  TEXT(30) NOT NULL,""CreatedDate""  INTEGER NOT NULL,""ExpiresAbsolute""  INTEGER NOT NULL,""Seconds""  INTEGER NOT NULL, PRIMARY KEY (""KEY"", ""Type""));";
 
             string n = i.ToString("x");
 
@@ -254,50 +254,32 @@ namespace PageCache.Store.SQLite
 
 
 
-                SQLiteTransaction tran = conn.BeginTransaction();
-
-
-                try
+                using (SQLiteCommand cmd = new SQLiteCommand())
                 {
+                    cmd.Connection = conn;
 
-
-                    using (SQLiteCommand cmd = new SQLiteCommand())
-                    {
-                        cmd.Connection = conn;
-                        cmd.Transaction = tran;
-
-                        cmd.CommandText = "delete from " + tablename + " where `Key`=@Key and `Type`=@Type";
-                        cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
-                        cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    using (SQLiteCommand cmd = new SQLiteCommand())
-                    {
-                        cmd.Connection = conn;
-                        cmd.Transaction = tran;
-
-                        cmd.CommandText = "insert into " + tablename + "(`Key`,`Type`,CreatedDate,ExpiresAbsolute,Seconds) values(@Key,@Type,@CreatedDate,@ExpiresAbsolute,@Seconds)";
-                        cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
-                        cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
-
-                        cmd.Parameters.Add(new SQLiteParameter("@CreatedDate", ConvertToTimeStamp(data.CreatedDate)));
-                        cmd.Parameters.Add(new SQLiteParameter("@ExpiresAbsolute", ConvertToTimeStamp(data.ExpiresAbsolute)));
-
-                        cmd.Parameters.Add(new SQLiteParameter("@Seconds", data.Seconds));
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    tran.Commit();
+                    cmd.CommandText = "delete from " + tablename + " where `Key`=@Key and `Type`=@Type";
+                    cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
+                    cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
+                    cmd.ExecuteNonQuery();
                 }
-                catch (Exception ex)
+
+                using (SQLiteCommand cmd = new SQLiteCommand())
                 {
-                    tran.Rollback();                   
+                    cmd.Connection = conn;
+
+                    cmd.CommandText = "insert into " + tablename + "(`Key`,`Type`,CreatedDate,ExpiresAbsolute,Seconds) values(@Key,@Type,@CreatedDate,@ExpiresAbsolute,@Seconds)";
+                    cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
+                    cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
+
+                    cmd.Parameters.Add(new SQLiteParameter("@CreatedDate", ConvertToTimeStamp(data.CreatedDate)));
+                    cmd.Parameters.Add(new SQLiteParameter("@ExpiresAbsolute", ConvertToTimeStamp(data.ExpiresAbsolute)));
+
+                    cmd.Parameters.Add(new SQLiteParameter("@Seconds", data.Seconds));
+                    cmd.ExecuteNonQuery();
                 }
-                finally
-                {
-                    tran.Dispose();
-                }
+
+
 
 
                 conn.Close();
