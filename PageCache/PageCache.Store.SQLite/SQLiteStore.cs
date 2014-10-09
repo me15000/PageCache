@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Data.SQLite;
 using System.IO;
-
+using System.Text;
+using System.Threading;
 
 namespace PageCache.Store.SQLite
 {
@@ -38,66 +39,102 @@ namespace PageCache.Store.SQLite
             return string.Concat(key[1], key[2]);
         }
 
+
+        void CreateDataBase(object o)
+        {
+            CreateDataBase((int)o);
+        }
+
+        void CreateDataBase(int i)
+        {
+            string formatsql = @"CREATE TABLE ""data_{0}"" (""KEY""  TEXT(32),""Type""  TEXT(30),""CreatedDate""  INTEGER,""ExpiresAbsolute""  INTEGER,""Seconds""  INTEGER);";
+
+            string n = i.ToString("x");
+
+            string dbPath = getDbPath(n[0]);
+
+            if (!File.Exists(dbPath))
+            {
+                string dirPath = Path.GetDirectoryName(dbPath);
+
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+
+
+                SQLiteConnection.CreateFile(dbPath);
+
+
+                StringBuilder sqlsb = new StringBuilder();
+                for (int j = 0; j < 16; j++)
+                {
+                    string j_n = j.ToString("x");
+
+                    for (int k = 0; k < 16; k++)
+                    {
+                        string k_n = k.ToString("x");
+
+                        string tableName = j_n + k_n;
+
+                        string sql = string.Format(formatsql, tableName);
+
+                        sqlsb.AppendLine(sql);
+
+                    }
+                }
+
+
+                SQLiteConnectionStringBuilder connBuilder = new SQLiteConnectionStringBuilder();
+                connBuilder.DataSource = dbPath;
+
+                using (SQLiteConnection conn = new SQLiteConnection())
+                {
+                    conn.ConnectionString = connBuilder.ToString();
+                    conn.Open();
+
+                    SQLiteTransaction tran = conn.BeginTransaction();
+
+                    try
+                    {
+                        using (SQLiteCommand cmd = new SQLiteCommand())
+                        {
+                            cmd.Transaction = tran;
+
+                            cmd.CommandText = sqlsb.ToString();
+                            cmd.Connection = conn;
+
+                            cmd.ExecuteNonQuery();
+
+                            tran.Commit();
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        tran.Rollback();
+                    }
+                    finally
+                    {
+                        tran.Dispose();
+                    }
+
+                    conn.Close();
+                    conn.Dispose();
+                }
+            }
+
+
+        }
+
         public SQLiteStore(string connectionString)
         {
             this.connectionString = connectionString;
             if (Directory.Exists(connectionString))
             {
-
-                string formatsql = @"CREATE TABLE ""data_{0}"" (""KEY""  TEXT(32),""Type""  TEXT(30),""CreatedDate""  INTEGER,""ExpiresAbsolute""  INTEGER,""Seconds""  INTEGER);";
-
                 for (int i = 0; i < 16; i++)
                 {
-                    string n = i.ToString("X");
-
-                    string dbPath = getDbPath(n[0]);
-
-                    if (!File.Exists(dbPath))
-                    {
-                        string dirPath = Path.GetDirectoryName(dbPath);
-
-                        if (!Directory.Exists(dirPath))
-                        {
-                            Directory.CreateDirectory(dirPath);
-                        }
-                       
-
-                        SQLiteConnection.CreateFile(dbPath);
-
-
-                        SQLiteConnectionStringBuilder connBuilder = new SQLiteConnectionStringBuilder();
-                        connBuilder.DataSource = dbPath;
-
-                        using (SQLiteConnection conn = new SQLiteConnection())
-                        {
-                            conn.ConnectionString = connBuilder.ToString();
-                            conn.Open();
-
-                            for (int j = 0; j < 16; j++)
-                            {
-                                string j_n = j.ToString("X");
-
-                                for (int k = 0; k < 16; k++)
-                                {
-                                    string k_n = k.ToString("X");
-
-                                    string tableName = j_n + k_n;
-
-                                    using (SQLiteCommand cmd = new SQLiteCommand())
-                                    {
-                                        string sql = string.Format(formatsql, tableName);
-
-                                        cmd.CommandText = sql;
-                                        cmd.Connection = conn;
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-                            }
-
-                            conn.Close();
-                            conn.Dispose();
-                        }
-                    }
+                    ThreadPool.QueueUserWorkItem(CreateDataBase, i);
                 }
             }
         }
@@ -166,7 +203,7 @@ namespace PageCache.Store.SQLite
             }
 
 
-            
+
 
             using (FileStream fs = File.Create(hPath, 1024 * 10))
             {
@@ -201,7 +238,11 @@ namespace PageCache.Store.SQLite
             }
 
 
+
             string key = data.Key;
+
+            string tablename = getTableName(key);
+
 
             SQLiteConnectionStringBuilder connBuilder = new SQLiteConnectionStringBuilder();
             connBuilder.DataSource = getDbPath(key);
@@ -211,31 +252,53 @@ namespace PageCache.Store.SQLite
                 conn.ConnectionString = connBuilder.ToString();
                 conn.Open();
 
-                string tablename = getTableName(key);
 
-                using (SQLiteCommand cmd = new SQLiteCommand())
+
+                SQLiteTransaction tran = conn.BeginTransaction();
+
+
+                try
                 {
-                    cmd.Connection = conn;
 
-                    cmd.CommandText = "delete from " + tablename + " where `Key`=@Key and `Type`=@Type";
-                    cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
-                    cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
-                    cmd.ExecuteNonQuery();
+
+                    using (SQLiteCommand cmd = new SQLiteCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.Transaction = tran;
+
+                        cmd.CommandText = "delete from " + tablename + " where `Key`=@Key and `Type`=@Type";
+                        cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
+                        cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (SQLiteCommand cmd = new SQLiteCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.Transaction = tran;
+
+                        cmd.CommandText = "insert into " + tablename + "(`Key`,`Type`,CreatedDate,ExpiresAbsolute,Seconds) values(@Key,@Type,@CreatedDate,@ExpiresAbsolute,@Seconds)";
+                        cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
+                        cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
+
+                        cmd.Parameters.Add(new SQLiteParameter("@CreatedDate", ConvertToTimeStamp(data.CreatedDate)));
+                        cmd.Parameters.Add(new SQLiteParameter("@ExpiresAbsolute", ConvertToTimeStamp(data.ExpiresAbsolute)));
+
+                        cmd.Parameters.Add(new SQLiteParameter("@Seconds", data.Seconds));
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    tran.Commit();
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();                   
+                }
+                finally
+                {
+                    tran.Dispose();
                 }
 
-                using (SQLiteCommand cmd = new SQLiteCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = "insert into " + tablename + "(`Key`,`Type`,CreatedDate,ExpiresAbsolute,Seconds) values(@Key,@Type,@CreatedDate,@ExpiresAbsolute,@Seconds)";
-                    cmd.Parameters.Add(new SQLiteParameter("@Key", data.Key));
-                    cmd.Parameters.Add(new SQLiteParameter("@Type", data.Type));
-                                        
-                    cmd.Parameters.Add(new SQLiteParameter("@CreatedDate", ConvertToTimeStamp(data.CreatedDate)));
-                    cmd.Parameters.Add(new SQLiteParameter("@ExpiresAbsolute", ConvertToTimeStamp(data.ExpiresAbsolute)));
-
-                    cmd.Parameters.Add(new SQLiteParameter("@Seconds", data.Seconds));
-                    cmd.ExecuteNonQuery();
-                }
 
                 conn.Close();
                 conn.Dispose();

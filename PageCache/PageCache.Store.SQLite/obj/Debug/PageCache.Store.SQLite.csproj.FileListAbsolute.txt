@@ -1,3 +1,4 @@
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.dll.config
 H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.dll
 H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.pdb
 H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.dll
