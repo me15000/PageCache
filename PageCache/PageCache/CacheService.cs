@@ -374,6 +374,7 @@ namespace PageCache
             var response = context.Response;
             response.BufferOutput = false;
 
+
             using (var memoryStream = new MemoryStream(data.BodyData))
             {
                 using (var outputStream = response.OutputStream)
@@ -381,19 +382,30 @@ namespace PageCache
 
                     byte[] buffer = new byte[256];
                     int count;
-                    while ((count = memoryStream.Read(buffer, 0, buffer.Length)) != 0)
+
+                    try
                     {
-                        outputStream.Write(buffer, 0, count);
-
-                        if (response.IsClientConnected)
+                        while ((count = memoryStream.Read(buffer, 0, buffer.Length)) != 0)
                         {
-                            outputStream.Flush();
-                        }
-                        else
-                        {
-                            break;
-                        }
+                            outputStream.Write(buffer, 0, count);
 
+                            if (response.IsClientConnected)
+                            {
+                                outputStream.Flush();
+                            }
+                            else
+                            {
+                                break;
+                            }
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (errorLog != null)
+                        {
+                            errorLog.Write(context.Request.Url.ToString() + "\r\n\r\n" + ex.Message);
+                        }
                     }
 
                     outputStream.Close();

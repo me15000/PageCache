@@ -36,47 +36,40 @@ namespace PageCache.Store.SQLServer
             return count > 0;
         }
 
+
+        Random rnd = new Random();
+
         public void Save(Store.StoreData data)
         {
 
             string tableName = getTableName(data.Key);
 
 
-            if (!Exists(data.Type, data.Key))
-            {
-                dbh.ExecuteNoneQuery("insert into [" + tableName + "]([KEY],[Type],[HeadersData],[BodyData],[CreatedDate],[ExpiresAbsolute],[Seconds]) values(@KEY,@Type,@HeadersData,@BodyData,@CreatedDate,@ExpiresAbsolute,@Seconds);"
+            if (Exists(data.Type, data.Key))
+            {       
+                dbh.ExecuteNoneQuery("delete from [" + tableName + "] where [KEY]=@KEY and [Type]=@Type;"
                     , dbh.CreateParameter("@KEY", data.Key)
-                    , dbh.CreateParameter("@Type", data.Type)
-
-                    /*二进制数据*/
-                    , dbh.CreateParameter("@HeadersData", data.HeadersData)
-                    , dbh.CreateParameter("@BodyData", data.BodyData)
-                    /*end 二进制数据*/
-
-                    , dbh.CreateParameter("@CreatedDate", data.CreatedDate)
-                    , dbh.CreateParameter("@ExpiresAbsolute", data.ExpiresAbsolute)
-                    , dbh.CreateParameter("@Seconds", data.Seconds)
-                    );
-            }
-            else
-            {
-                dbh.ExecuteNoneQuery("update [" + tableName + "] set [HeadersData]=@HeadersData,[BodyData]=@BodyData,[GZipBodyData]=@GZipBodyData,[CreatedDate]=@CreatedDate,[ExpiresAbsolute]=@ExpiresAbsolute,[Seconds]=@Seconds where [KEY]=@KEY and [Type]=@Type;"
-                    , dbh.CreateParameter("@KEY", data.Key)
-                    , dbh.CreateParameter("@Type", data.Type)
-
-                    /*二进制数据*/
-                          , dbh.CreateParameter("@HeadersData", data.HeadersData)
-                    , dbh.CreateParameter("@BodyData", data.BodyData)
-                    /*end 二进制数据*/
-
-                    , dbh.CreateParameter("@CreatedDate", data.CreatedDate)
-                    , dbh.CreateParameter("@ExpiresAbsolute", data.ExpiresAbsolute)
-                    , dbh.CreateParameter("@Seconds", data.Seconds)
-                    );
+                    , dbh.CreateParameter("@Type", data.Type));
             }
 
 
-            if (new Random().Next(0, 3) == 0)
+
+            dbh.ExecuteNoneQuery("insert into [" + tableName + "]([KEY],[Type],[HeadersData],[BodyData],[CreatedDate],[ExpiresAbsolute],[Seconds]) values(@KEY,@Type,@HeadersData,@BodyData,@CreatedDate,@ExpiresAbsolute,@Seconds);"
+                   , dbh.CreateParameter("@KEY", data.Key)
+                   , dbh.CreateParameter("@Type", data.Type)
+
+                   /*二进制数据*/
+                   , dbh.CreateParameter("@HeadersData", data.HeadersData)
+                   , dbh.CreateParameter("@BodyData", data.BodyData)
+                /*end 二进制数据*/
+
+                   , dbh.CreateParameter("@CreatedDate", data.CreatedDate)
+                   , dbh.CreateParameter("@ExpiresAbsolute", data.ExpiresAbsolute)
+                   , dbh.CreateParameter("@Seconds", data.Seconds)
+                   );
+
+
+            if (rnd.Next(0, 3) == 0)
             {
                 dbh.ExecuteNoneQuery("delete from [" + tableName + "]  where ExpiresAbsolute < GetDate() - 1");
             }

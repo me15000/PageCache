@@ -75,9 +75,20 @@ namespace PageCache.Store.MongoDB
                 }
             }
 
+            string id = getId(data.Type, data.Key);
+
+            IMongoQuery query = Query.EQ("_id", new ObjectId(id));
+            long c = collection.Count(query);
+
+            if (c > 0)
+            {
+
+                collection.Remove(query);
+            }
+            
 
             BsonDocument document = new BsonDocument();
-            document.Set("_id", getId(data.Type, data.Key));
+            document.Set("_id", id);
 
 
             document.Set("Type", data.Type);

@@ -1,0 +1,9 @@
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\System.Data.SQLite.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.pdb
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\bin\Debug\System.Data.SQLite.xml
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.csprojResolveAssemblyReference.cache
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.dll
+H:\Github\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.pdb
