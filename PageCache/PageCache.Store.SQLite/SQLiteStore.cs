@@ -54,6 +54,14 @@ namespace PageCache.Store.SQLite
 
                     if (!File.Exists(dbPath))
                     {
+                        string dirPath = Path.GetDirectoryName(dbPath);
+
+                        if (!Directory.Exists(dirPath))
+                        {
+                            Directory.CreateDirectory(dirPath);
+                        }
+                       
+
                         SQLiteConnection.CreateFile(dbPath);
 
 
@@ -147,6 +155,18 @@ namespace PageCache.Store.SQLite
             {
                 File.Delete(hPath);
             }
+            else
+            {
+                string dirPath = Path.GetDirectoryName(hPath);
+
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+            }
+
+
+            
 
             using (FileStream fs = File.Create(hPath, 1024 * 10))
             {
@@ -162,6 +182,16 @@ namespace PageCache.Store.SQLite
             {
                 File.Delete(bPath);
             }
+            else
+            {
+                string dirPath = Path.GetDirectoryName(bPath);
+
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+            }
+
 
             using (FileStream fs = File.Create(bPath, 1024 * 10))
             {
