@@ -22,7 +22,7 @@ namespace PageCache.Store.SQLServer
 
         string getTableName(string key)
         {
-            return "Data_" + key.Substring(0, 3);
+            return "data_" + key.Substring(0, 2);
         }
 
 

@@ -140,7 +140,11 @@ namespace PageCache
                                 else
                                 {
                                     string v = context.Request.QueryString[param.Name];
-                                    info.QueryString[param.Name] = GetParamRegexValue(param.PatternRegex, v);
+                                    if (v != null)
+                                    {
+                                        info.QueryString[param.Name] = GetParamRegexValue(param.PatternRegex, v);
+                                    }
+
                                 }
 
 
@@ -156,7 +160,11 @@ namespace PageCache
                                 {
                                     string v = context.Request.Form[param.Name];
 
-                                    info.Form[param.Name] = GetParamRegexValue(param.PatternRegex, v);
+                                    if (v != null)
+                                    {
+                                        info.Form[param.Name] = GetParamRegexValue(param.PatternRegex, v);
+                                    }
+
                                 }
 
 
@@ -171,8 +179,11 @@ namespace PageCache
                                 else
                                 {
                                     string v = context.Request.Headers[param.Name];
+                                    if (v != null)
+                                    {
+                                        info.Headers[param.Name] = GetParamRegexValue(param.PatternRegex, v);
+                                    }
 
-                                    info.Headers[param.Name] = GetParamRegexValue(param.PatternRegex, v);
                                 }
 
                                 break;
@@ -262,7 +273,7 @@ namespace PageCache
             if (info.QueryString.Count > 0)
             {
 
-                if (action.IndexOf("?")>=0)
+                if (action.IndexOf("?") >= 0)
                 {
                     uriStringBuilder.Append("&");
 
@@ -275,27 +286,36 @@ namespace PageCache
                     genkeyUri.Append("?");
                 }
 
-            
+
+                bool isfirst = true;
 
                 for (int i = 0; i < info.QueryString.Keys.Count; i++)
                 {
                     string key = info.QueryString.Keys[i];
 
-                    if (i > 0)
-                    {
-                        uriStringBuilder.Append("&");
-                    }
-
                     string value = info.QueryString[key];
 
-                    uriStringBuilder.Append(key);
-                    uriStringBuilder.Append("=");
-                    uriStringBuilder.Append(value);
+
+                    if (value != null)
+                    {
+                        if (!isfirst)
+                        {
+                            uriStringBuilder.Append("&");
+                        }
+
+                        isfirst = false;
+
+                        uriStringBuilder.Append(key);
+                        uriStringBuilder.Append("=");
+                        uriStringBuilder.Append(value);
 
 
-                    genkeyUri.Append(key);
-                    genkeyUri.Append("=");
-                    genkeyUri.Append(value);
+                        genkeyUri.Append(key);
+                        genkeyUri.Append("=");
+                        genkeyUri.Append(value);
+                    }
+
+
                 }
             }
 
