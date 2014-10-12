@@ -261,9 +261,21 @@ namespace PageCache
 
             if (info.QueryString.Count > 0)
             {
-                uriStringBuilder.Append("?");
 
-                genkeyUri.Append("?");
+                if (action.IndexOf("?")>=0)
+                {
+                    uriStringBuilder.Append("&");
+
+                    genkeyUri.Append("&");
+                }
+                else
+                {
+                    uriStringBuilder.Append("?");
+
+                    genkeyUri.Append("?");
+                }
+
+            
 
                 for (int i = 0; i < info.QueryString.Keys.Count; i++)
                 {
