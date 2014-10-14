@@ -1,0 +1,4 @@
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache\bin\Release\PageCache.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache\bin\Release\PageCache.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache\obj\Release\PageCache.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache\obj\Release\PageCache.pdb

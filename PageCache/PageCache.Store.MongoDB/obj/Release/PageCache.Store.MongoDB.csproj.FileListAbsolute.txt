@@ -9,3 +9,12 @@ C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MongoDB\bin\Release\Mon
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.dll
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Release\PageCache.Store.MongoDB.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\PageCache.Store.MongoDB.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\PageCache.Store.MongoDB.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\MongoDB.Bson.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\MongoDB.Driver.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\PageCache.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Release\PageCache.pdb

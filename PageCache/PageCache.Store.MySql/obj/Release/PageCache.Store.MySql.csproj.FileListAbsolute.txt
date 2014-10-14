@@ -5,3 +5,10 @@ C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MySql\bin\Release\PageC
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.csprojResolveAssemblyReference.cache
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.dll
 C:\Users\IFHZ\Documents\GitHub\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\bin\Release\PageCache.Store.MySql.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\bin\Release\PageCache.Store.MySql.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\bin\Release\PageCache.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\bin\Release\PageCache.pdb
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.csprojResolveAssemblyReference.cache
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.dll
+C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.MySql\obj\Release\PageCache.Store.MySql.pdb

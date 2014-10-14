@@ -484,7 +484,8 @@ namespace PageCache
 
             if (!string.IsNullOrEmpty(v))
             {
-                var m = rule.MatchRegex.Match(context.Request.RawUrl);
+                Uri uri = context.Request.Url;
+                var m = rule.MatchRegex.Match(uri.AbsolutePath);
                 if (m.Success)
                 {
                     for (int j = 0; j < m.Groups.Count; j++)
