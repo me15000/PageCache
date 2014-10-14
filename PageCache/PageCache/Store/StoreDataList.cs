@@ -94,7 +94,8 @@ namespace PageCache.Store
 
             if (this.datalist.Count >= capacity)
             {
-                ThreadPool.QueueUserWorkItem(SaveAsync, null);
+                //ThreadPool.QueueUserWorkItem(SaveAsync, null);
+                SaveAsync(null);
             }
         }
 

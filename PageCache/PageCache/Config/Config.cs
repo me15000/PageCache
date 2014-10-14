@@ -233,7 +233,7 @@ namespace PageCache.Config
         [XmlAttribute("cacheSeconds")]
         public int CacheSeconds { get; set; }
 
-        [XmlAttribute("memoryEnable"), DefaultSettingValue("true")]
+        [XmlAttribute("memoryEnable"), DefaultSettingValue("false")]
         public bool MemoryEnable { get; set; }
 
 
