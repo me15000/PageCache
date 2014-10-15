@@ -24,6 +24,7 @@ namespace PageCache
         Common.Log errorLog = null;
 
         Common.Log accessLog = null;
+
         public CacheService(Setting.Setting setting)
         {
             this.setting = setting;
