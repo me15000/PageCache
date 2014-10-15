@@ -103,6 +103,8 @@ namespace PageCache
             info.Store = rule.GetStore();
 
 
+
+
             if (rule.ConfigRule.Params != null)
             {
 
@@ -307,7 +309,8 @@ namespace PageCache
 
                         uriStringBuilder.Append(key);
                         uriStringBuilder.Append("=");
-                        uriStringBuilder.Append(value);
+
+                        uriStringBuilder.Append(HttpUtility.UrlEncode(value));
 
 
                         genkeyUri.Append(key);

@@ -57,6 +57,7 @@ namespace PageCache
                 this.accessLog = new Common.Log(config.AccessLogPath);
             }
         }
+
         public void Process(HttpContext context)
         {
             var rule = setting.Rules.Get(context);
@@ -92,6 +93,7 @@ namespace PageCache
                 }
             }
         }
+
         bool EchoData(RequestInfo info)
         {
             Store.StoreData data = null;
@@ -315,11 +317,11 @@ namespace PageCache
 
         Store.StoreData CreateData(RequestInfo info)
         {
-            byte[] rheadersData =  GetRequestHeadersData(info);
+            byte[] rheadersData = GetRequestHeadersData(info);
 
             try
             {
-            
+
 
                 Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, rheadersData);
 
@@ -382,6 +384,7 @@ namespace PageCache
 
             return null;
         }
+
         bool EchoData(HttpContext context, Store.StoreData data)
         {
             bool echoGZip = IsClientProvidedGZip(context);
@@ -463,6 +466,7 @@ namespace PageCache
 
             return true;
         }
+
         bool IsClientProvidedGZip(HttpContext context)
         {
             string client_accept_encoding = context.Request.Headers.Get("Accept-Encoding") ?? string.Empty;
@@ -473,6 +477,7 @@ namespace PageCache
             }
             return false;
         }
+
         void EchoBrowserCache(HttpContext context, Store.StoreDataInfo inf)
         {
             if (inf != null)
@@ -488,6 +493,7 @@ namespace PageCache
                 context.Response.Cache.SetLastModified(inf.CreatedDate);
             }
         }
+
         void EchoContentEncodingCharset(HttpContext context, string contentType)
         {
             if (!string.IsNullOrEmpty(contentType))
@@ -505,6 +511,7 @@ namespace PageCache
                 }
             }
         }
+
         //输出浏览器缓存
         bool EchoClientCache(HttpContext context, int cacheSeconds)
         {
@@ -531,6 +538,8 @@ namespace PageCache
 
             return false;
         }
+
+
         bool BeFilterHeader(string headerKey)
         {
             string headersFilters = this.setting.Config.HeadersFilters;
@@ -560,6 +569,7 @@ namespace PageCache
 
             return false;
         }
+
         int GetStatusCacheSeconds(int statusCode)
         {
             int returnCacheSecond = -1;
@@ -618,6 +628,8 @@ namespace PageCache
 
             return returnCacheSecond;
         }
+
+
         byte[] GetRequestHeadersData(RequestInfo info)
         {
             Uri uri = new Uri(info.UriString);
@@ -675,7 +687,13 @@ namespace PageCache
                 accessLog.Write(requestString);
             }
 
-            byte[] rHeadersData = Encoding.ASCII.GetBytes(requestString);            
+            var encoding = info.Context.Request.ContentEncoding;
+            if (encoding == null)
+            {
+                encoding = Encoding.UTF8;
+            }
+
+            byte[] rHeadersData = encoding.GetBytes(requestString);
 
             return rHeadersData;
         }
