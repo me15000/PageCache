@@ -222,6 +222,11 @@ namespace PageCache
 
             if (TryCreateData(info, data, out newdata))
             {
+                if (info.Store != null)
+                {
+                    info.Store.Delete(info.Type, info.Key);
+                }
+
                 if (accessLog != null)
                 {
                     accessLog.Write("TryCreateData success");
@@ -322,51 +327,50 @@ namespace PageCache
 
             try
             {
-
-
                 Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, rheadersData);
 
                 if (httpdata != null)
                 {
-                    var data = ConvertToStoreData(info, httpdata);
-
-                    if (data != null)
+                    if (httpdata.BodyData != null && httpdata.Headers != null)
                     {
+                        var data = ConvertToStoreData(info, httpdata);
 
-                        if (data.Seconds > 0)
+                        if (data != null)
                         {
-                            Store.IStore store = info.Rule.GetStore();
-                            if (store != null)
+                            if (data.Seconds > 0)
                             {
-                                this.storeDataList.Add(store, data);
+                                if (data.HeadersData != null && data.BodyData != null)
+                                {
+                                    if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
+                                    {
+                                        Store.IStore store = info.Rule.GetStore();
+
+                                        if (store != null)
+                                        {
+                                            this.storeDataList.Add(store, data);
+                                        }
+
+                                        return data;
+                                    }
+                                }
                             }
                         }
-
-                        return data;
-                    }
-                    else
-                    {
-                        if (errorLog != null)
-                        {
-                            StringBuilder exBuilder = new StringBuilder();
-                            exBuilder.AppendLine("CreateData ConvertToStoreData is null");
-                            exBuilder.AppendLine(RequestInfo.ToString(info));
-
-                            errorLog.Write(exBuilder.ToString());
-                        }
                     }
                 }
-                else
+
+
+
+                if (errorLog != null)
                 {
-                    if (errorLog != null)
-                    {
-                        StringBuilder exBuilder = new StringBuilder();
-                        exBuilder.AppendLine("CreateData httpHelper GetHttpData is null");
-                        exBuilder.AppendLine(RequestInfo.ToString(info));
+                    StringBuilder exBuilder = new StringBuilder();
 
-                        errorLog.Write(exBuilder.ToString());
-                    }
+                    exBuilder.AppendLine("CreateData has error");
+
+                    exBuilder.AppendLine(RequestInfo.ToString(info));
+
+                    errorLog.Write(exBuilder.ToString());
                 }
+
             }
             catch (Exception ex)
             {

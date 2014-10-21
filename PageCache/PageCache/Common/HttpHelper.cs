@@ -504,9 +504,10 @@ namespace PageCache.Common
                             {
                                 bodyData[nowContentLength + i] = buffer[i];
                             }
+                            nowContentLength += receiveCount;
                         }
 
-                        nowContentLength += receiveCount;
+
 
                         if (receiveCount == 0)
                         {
