@@ -7,3 +7,7 @@ H:\Github\PageCache5\PageCache\PageCache\bin\Release\PageCache.dll
 H:\Github\PageCache5\PageCache\PageCache\bin\Release\PageCache.pdb
 H:\Github\PageCache5\PageCache\PageCache\obj\Release\PageCache.dll
 H:\Github\PageCache5\PageCache\PageCache\obj\Release\PageCache.pdb
+H:\Github\PageCache5\PageCache5\PageCache\PageCache\bin\Release\PageCache.dll
+H:\Github\PageCache5\PageCache5\PageCache\PageCache\bin\Release\PageCache.pdb
+H:\Github\PageCache5\PageCache5\PageCache\PageCache\obj\Release\PageCache.dll
+H:\Github\PageCache5\PageCache5\PageCache\PageCache\obj\Release\PageCache.pdb

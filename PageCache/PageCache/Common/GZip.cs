@@ -20,7 +20,7 @@ namespace PageCache.Common
 
 
             int bufferSize = 256;
-
+            
 
             using (MemoryStream stream = new MemoryStream())
             {
