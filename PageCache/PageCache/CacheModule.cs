@@ -15,7 +15,7 @@ namespace PageCache
             }
         }
         //初始化设置
-        bool InitSetting()
+        public bool InitSetting()
         {
             string configPath = AppDomain.CurrentDomain.BaseDirectory + ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
 
@@ -27,9 +27,9 @@ namespace PageCache
                 {
                     return false;
                 }
-                                
+
                 Setting.Setting setting = new Setting.Setting(config);
-                this.service = new CacheService(setting);
+                this.service = new CacheService(setting, this);
                 return true;
             }
 

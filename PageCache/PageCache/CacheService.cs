@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Web;
 
@@ -25,9 +26,14 @@ namespace PageCache
 
         Common.Log accessLog = null;
 
-        public CacheService(Setting.Setting setting)
+        CacheModule module = null;
+
+
+        public CacheService(Setting.Setting setting, CacheModule module)
         {
             this.setting = setting;
+
+            this.module = module;
 
             var config = setting.Config;
 
@@ -58,6 +64,16 @@ namespace PageCache
                 this.accessLog = new Common.Log(config.AccessLogPath);
             }
         }
+
+
+        public void ReloadSetting()
+        {
+            if (this.module != null)
+            {
+                this.module.InitSetting();
+            }
+        }
+
 
         public void Process(HttpContext context)
         {
@@ -210,8 +226,15 @@ namespace PageCache
                         }
                         else
                         {
-                            info.Store.Delete(info.Type, info.Key);
+                            //info.Store.Delete(info.Type, info.Key);
                         }
+                    }
+                }
+                else
+                {
+                    if (errorLog != null)
+                    {
+                        errorLog.Write("store is null");
                     }
                 }
             }
@@ -252,6 +275,7 @@ namespace PageCache
         }
 
         Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
+        
         bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
         {
             outdata = null;
@@ -321,12 +345,19 @@ namespace PageCache
         }
 
 
+     
+
+       
         Store.StoreData CreateData(RequestInfo info)
         {
             byte[] rheadersData = GetRequestHeadersData(info);
 
+
+
             try
             {
+                StringBuilder exBuilder = new StringBuilder();
+
                 Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, rheadersData);
 
                 if (httpdata != null)
@@ -337,11 +368,11 @@ namespace PageCache
 
                         if (data != null)
                         {
-                            if (data.Seconds > 0)
+                            if (data.HeadersData != null && data.BodyData != null)
                             {
-                                if (data.HeadersData != null && data.BodyData != null)
+                                if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
                                 {
-                                    if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
+                                    if (data.Seconds > 0)
                                     {
                                         Store.IStore store = info.Rule.GetStore();
 
@@ -350,19 +381,36 @@ namespace PageCache
                                             this.storeDataList.Add(store, data);
                                         }
 
-                                        return data;
+
                                     }
+
+                                    return data;
                                 }
                             }
+                            else
+                            {
+                                exBuilder.AppendLine("CreateData data.BodyData is null or HeadersData data is null");
+                            }
+                        }
+                        else
+                        {
+                            exBuilder.AppendLine("CreateData ConvertToStoreData data is null");
                         }
                     }
+                    else
+                    {
+                        exBuilder.AppendLine("CreateData httpdata.BodyData is null or Headers data is null");
+                    }
+                }
+                else
+                {
+                    exBuilder.AppendLine("CreateData httpdata is null");
                 }
 
 
 
                 if (errorLog != null)
                 {
-                    StringBuilder exBuilder = new StringBuilder();
 
                     exBuilder.AppendLine("CreateData has error");
 
@@ -389,6 +437,8 @@ namespace PageCache
 
             return null;
         }
+
+
 
         bool EchoData(HttpContext context, Store.StoreData data)
         {
