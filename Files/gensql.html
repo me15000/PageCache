@@ -1,0 +1,190 @@
+<html>
+<body>
+
+
+
+
+<div>
+	<table style="border:none">
+		<tr>
+			<td>
+				<select id="sqltype" onchange="GenSQL()">
+					<option>数据库类型</option>
+					<option value="mysql">mysql</option>
+					<option value="mssql">mssql</option>
+				</select>
+			</td>
+
+			<td>
+				<input type="text" size="5" value="2" id="dimension" placeholder="维度" onblur="GenSQL()" />
+			</td>	
+		</tr>
+		
+	</table>
+
+	
+	<textarea style="width:90%;height:480px" id="sql_result"></textarea>
+
+	
+</div>
+
+
+
+<textarea id="sql_format_mysql" style="display:none">
+CREATE TABLE `data_{n}` (
+  `KEY` char(32) COLLATE utf8_bin NOT NULL,
+  `Type` varchar(30) COLLATE utf8_bin NOT NULL,
+  `HeadersData` blob NOT NULL,
+  `BodyData` mediumblob NOT NULL,
+  `CreatedDate` datetime NOT NULL,
+  `ExpiresAbsolute` datetime DEFAULT NULL,
+  `Seconds` int(11) DEFAULT NULL,
+  PRIMARY KEY (`KEY`,`Type`),
+  UNIQUE KEY `KEYTYPE` (`key`,`type`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+</textarea>
+
+<textarea id="sql_format_mssql" style="display:none">
+DROP TABLE [data_{n}];
+go
+CREATE TABLE [data_{n}](
+	[KEY] [char](32) NOT NULL,
+	[Type] [varchar](30) NOT NULL,
+	
+	[HeadersData] [varbinary](MAX) NOT NULL,
+	[BodyData] [varbinary](MAX) NOT NULL,
+	[CreatedDate] [datetime] NOT NULL,
+	[ExpiresAbsolute] [datetime] NOT NULL,
+	[Seconds] [int] NOT NULL DEFAULT ((0)),
+	
+	 CONSTRAINT [PK_data_{n}] PRIMARY KEY CLUSTERED 
+	(
+		[KEY] ASC,
+		[Type] ASC
+	)	
+	WITH (PAD_INDEX  = OFF,  IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = OFF) ON [area{area}]
+	
+) TEXTIMAGE_ON [area{area}]
+go 
+
+
+
+</textarea>
+
+
+<!--
+
+1------------------
+ALTER DATABASE [pagecache5] ADD FILEGROUP [area{area}]
+GO
+
+2------------------
+ALTER DATABASE [pagecache5] ADD FILE
+(NAME = N'pagecache5{area}',
+FILENAME = N'D:\DataBases\Data\pagecache5{area}.ndf')
+TO FILEGROUP [area{area}]
+GO
+
+3------------------
+DROP TABLE [data_{n}];
+go
+CREATE TABLE [data_{n}](
+	[KEY] [char](32) NOT NULL,
+	[Type] [varchar](30) NOT NULL,
+	
+	[HeadersData] [varbinary](MAX) NOT NULL,
+	[BodyData] [varbinary](MAX) NOT NULL,
+	[CreatedDate] [datetime] NOT NULL,
+	[ExpiresAbsolute] [datetime] NOT NULL,
+	[Seconds] [int] NOT NULL DEFAULT ((0)),
+	
+	 CONSTRAINT [PK_data_{n}] PRIMARY KEY CLUSTERED 
+	(
+		[KEY] ASC,
+		[Type] ASC
+	)	
+	WITH (PAD_INDEX  = OFF,  IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = OFF) ON [area{area}]
+	
+) TEXTIMAGE_ON [area{area}]
+go 
+
+
+ALTER DATABASE [pagecache5] ADD FILEGROUP [area{area}]
+GO
+ALTER DATABASE [pagecache5] ADD FILE
+(NAME = N'pagecache5{area}',
+FILENAME = N'D:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\DATA\pagecache5{area}.ndf')
+TO FILEGROUP [area{area}]
+GO
+
+DROP TABLE [data_{n}];
+go
+CREATE TABLE [data_{n}](
+	[KEY] [char](32) NOT NULL,
+	[Type] [varchar](30) NOT NULL,
+	
+	[HeadersData] [varbinary](MAX) NOT NULL,
+	[BodyData] [varbinary](MAX) NOT NULL,
+	[CreatedDate] [datetime] NOT NULL,
+	[ExpiresAbsolute] [datetime] NOT NULL,
+	[Seconds] [int] NOT NULL DEFAULT ((0)),
+	
+	 CONSTRAINT [PK_data_{n}] PRIMARY KEY CLUSTERED 
+	(
+		[KEY] ASC,
+		[Type] ASC
+	)	
+	WITH (PAD_INDEX  = OFF,  IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = OFF) ON [area{area}]
+) 
+go 
+-->
+
+<script>
+
+
+
+function GenSQL() {
+	var q = function (id) {
+		return document.getElementById(id);
+	}
+
+	var fsql = null;
+	
+	var sqltypeobj = q('sqltype');
+	
+	var sqltype = sqltypeobj.options[sqltypeobj.selectedIndex].value;
+	switch (sqltype) {
+		case 'mysql':
+			fsql = q('sql_format_mysql').value;
+			break;
+
+		case 'mssql':
+			fsql = q('sql_format_mssql').value;
+			break;
+			
+		case 'maxtimes':
+			fsql = q('sql_format_max').value;
+			break;
+	}
+
+	if (fsql) {
+		var arr = [];		
+		var dimension = parseInt(q('dimension').value);		
+		var prefix = '';		
+		for(var i=0;i<dimension;i++){
+			prefix+='0';
+		}		
+		for (var i = 0; i < Math.pow(16, dimension); i++) {
+			var hex = prefix + i.toString(16);
+			var n = hex.substr(hex.length - dimension);
+			var val = fsql.replace(/\{n\}/g, n).replace(/\{area\}/g, n[0]);
+			arr.push(val);
+		}
+		var sql_result_object = q('sql_result');
+		sql_result_object.value = arr.join('');
+	}
+}
+
+</script>
+</body>
+</html>
