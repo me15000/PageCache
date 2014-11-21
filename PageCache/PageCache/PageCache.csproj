@@ -50,7 +50,7 @@
     <Compile Include="CacheModule.cs" />
     <Compile Include="CacheService.cs" />
     <Compile Include="Common\GZip.cs" />
-    <Compile Include="Common\HttpHelper.cs" />
+    <Compile Include="Common\HttpClient.cs" />
     <Compile Include="Common\Log.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

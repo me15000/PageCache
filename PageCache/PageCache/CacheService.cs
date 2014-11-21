@@ -20,7 +20,7 @@ namespace PageCache
 
         RequestQueue requestQueue = null;
 
-        Common.HttpHelper httpHelper;
+        Common.HttpClient httpClient;
 
         Common.Log errorLog = null;
 
@@ -47,11 +47,11 @@ namespace PageCache
             this.requestQueue = new RequestQueue();
 
 
-            this.httpHelper = new Common.HttpHelper();
+            this.httpClient = new Common.HttpClient();
 
-            this.httpHelper.ReceiveTimeout = config.NetReceiveTimeout;
+            this.httpClient.ReceiveTimeout = config.NetReceiveTimeout;
 
-            this.httpHelper.SendTimeout = config.NetSendTimeout;
+            this.httpClient.SendTimeout = config.NetSendTimeout;
 
 
             if (!string.IsNullOrEmpty(config.ErrorLogPath))
@@ -241,9 +241,9 @@ namespace PageCache
 
             #endregion
 
-            Store.StoreData newdata = null;
+            Store.StoreData outdata = null;
 
-            if (TryCreateData(info, data, out newdata))
+            if (TryCreateData(info, data, out outdata))
             {
                 if (info.Store != null)
                 {
@@ -263,19 +263,20 @@ namespace PageCache
                 }
             }
 
-            if (newdata != null)
+            if (outdata != null)
             {
-                if (EchoData(info.Context, newdata))
+                if (EchoData(info.Context, outdata))
                 {
                     return true;
                 }
             }
 
+
             return false;
         }
 
         Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
-        
+
         bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
         {
             outdata = null;
@@ -334,6 +335,10 @@ namespace PageCache
 
                 createResult = true;
             }
+            else
+            {
+                outdata = olddata;
+            }
 
 
             if (creatingDataList.ContainsKey(creatingKey))
@@ -345,9 +350,9 @@ namespace PageCache
         }
 
 
-     
 
-       
+
+
         Store.StoreData CreateData(RequestInfo info)
         {
             byte[] rheadersData = GetRequestHeadersData(info);
@@ -358,7 +363,7 @@ namespace PageCache
             {
                 StringBuilder exBuilder = new StringBuilder();
 
-                Common.HttpData httpdata = httpHelper.GetHttpData(info.HostAddress, rheadersData);
+                Common.HttpData httpdata = httpClient.GetData(info.HostAddress, rheadersData);
 
                 if (httpdata != null)
                 {
@@ -446,7 +451,7 @@ namespace PageCache
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
 
-            Common.HttpDataInfo hhs = Common.HttpHelper.GetHeaders(headerstrings);
+            Common.HttpDataInfo hhs =  Common.HttpClient.ParseHeaderString(headerstrings);
 
             if (hhs != null)
             {
