@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Web;
 
@@ -102,7 +101,7 @@ namespace PageCache
 
                     if (!EchoData(info))
                     {
-                        context.Response.Write("The system is busy now. Please try later.");
+                        context.Response.Write("The system is busy now. Please try later.");                        
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -357,11 +356,9 @@ namespace PageCache
         {
             byte[] rheadersData = GetRequestHeadersData(info);
 
-
-
             try
             {
-                StringBuilder exBuilder = new StringBuilder();
+                
 
                 Common.HttpData httpdata = httpClient.GetData(info.HostAddress, rheadersData);
 
@@ -375,55 +372,24 @@ namespace PageCache
                         {
                             if (data.HeadersData != null && data.BodyData != null)
                             {
-                                if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
+                                if (data.HeadersData.Length > 0)
                                 {
                                     if (data.Seconds > 0)
                                     {
                                         Store.IStore store = info.Rule.GetStore();
 
-                                        if (store != null)
+                                        if (store != null && data.BodyData.Length >= 0)
                                         {
                                             this.storeDataList.Add(store, data);
                                         }
-
-
                                     }
 
                                     return data;
                                 }
-                            }
-                            else
-                            {
-                                exBuilder.AppendLine("CreateData data.BodyData is null or HeadersData data is null");
-                            }
-                        }
-                        else
-                        {
-                            exBuilder.AppendLine("CreateData ConvertToStoreData data is null");
-                        }
-                    }
-                    else
-                    {
-                        exBuilder.AppendLine("CreateData httpdata.BodyData is null or Headers data is null");
-                    }
+                            }                     
+                        }                  
+                    }          
                 }
-                else
-                {
-                    exBuilder.AppendLine("CreateData httpdata is null");
-                }
-
-
-
-                if (errorLog != null)
-                {
-
-                    exBuilder.AppendLine("CreateData has error");
-
-                    exBuilder.AppendLine(RequestInfo.ToString(info));
-
-                    errorLog.Write(exBuilder.ToString());
-                }
-
             }
             catch (Exception ex)
             {
