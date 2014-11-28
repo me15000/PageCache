@@ -56,7 +56,11 @@ namespace PageCache.Store
         {
             MemoryDataEntity entity = Find(type, key);
 
-            entity.LastReadDate = DateTime.Now;
+            if (entity != null)
+            {
+                entity.LastReadDate = DateTime.Now;
+            }
+
 
             return entity;
         }
@@ -123,8 +127,8 @@ namespace PageCache.Store
             if (ts > clearSeconds || this.datalist.Count >= this.capacity)
             {
 
-                //ThreadPool.QueueUserWorkItem(ClearAsync ,null);
-                ClearAsync(null);
+                ThreadPool.QueueUserWorkItem(ClearAsync, null);
+                //ClearAsync(null);
             }
         }
 
