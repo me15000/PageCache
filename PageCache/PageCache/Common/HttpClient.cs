@@ -364,22 +364,41 @@ namespace PageCache.Common
 
         public HttpData GetData(string host, int port, byte[] headersData)
         {
+            HttpData data = null;
+
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-            socket.Connect(host, port);
-            socket.Send(headersData);
 
-            HttpData data = GetData(socket);
 
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Disconnect(true);
+            try
+            {
+                socket.Connect(host, port);
+                socket.Send(headersData);
+                data = GetData(socket);
+            }
+            catch
+            {
+     
+            }
+            finally
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Disconnect(true);
+            }         
+
+
+
+
             return data;
         }
 
         public HttpData GetData(IPEndPoint address, byte[] headersData)
         {
+
+            HttpData data = null;
+
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
 
@@ -387,25 +406,23 @@ namespace PageCache.Common
             socket.SendTimeout = sendTimeout;
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
+            try
+            {
+                socket.Connect(address.Address, address.Port);
+                socket.Send(headersData);
+                data = GetData(socket);
+            }
+            catch
+            {
 
-            socket.Connect(address.Address, address.Port);
-            socket.Send(headersData);
+            }
+            finally
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Disconnect(true);
+            }
 
-            HttpData data = GetData(socket);
-
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Disconnect(true);
             return data;
-
         }
-
-
-
-
-
-
-
-
-
     }
 }

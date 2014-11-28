@@ -101,7 +101,7 @@ namespace PageCache
 
                     if (!EchoData(info))
                     {
-                        context.Response.Write("The system is busy now. Please try later.");                        
+                        context.Response.Write("The system is busy now. Please try later.");
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -358,7 +358,7 @@ namespace PageCache
 
             try
             {
-                
+
 
                 Common.HttpData httpdata = httpClient.GetData(info.HostAddress, rheadersData);
 
@@ -386,9 +386,9 @@ namespace PageCache
 
                                     return data;
                                 }
-                            }                     
-                        }                  
-                    }          
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -417,7 +417,7 @@ namespace PageCache
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
 
-            Common.HttpDataInfo hhs =  Common.HttpClient.ParseHeaderString(headerstrings);
+            Common.HttpDataInfo hhs = Common.HttpClient.ParseHeaderString(headerstrings);
 
             if (hhs != null)
             {
@@ -473,10 +473,12 @@ namespace PageCache
                         }
                         catch (Exception ex)
                         {
+                            /*
                             if (errorLog != null)
                             {
                                 errorLog.Write(context.Request.Url.ToString() + "\r\n\r\n" + ex.Message);
                             }
+                            */
                         }
 
                         outputStream.Close();
