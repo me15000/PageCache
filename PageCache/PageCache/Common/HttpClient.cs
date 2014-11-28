@@ -380,13 +380,13 @@ namespace PageCache.Common
             }
             catch
             {
-     
+
             }
             finally
             {
-                socket.Shutdown(SocketShutdown.Both);
+                //socket.Shutdown(SocketShutdown.Receive);
                 socket.Disconnect(true);
-            }         
+            }
 
 
 
@@ -418,7 +418,7 @@ namespace PageCache.Common
             }
             finally
             {
-                socket.Shutdown(SocketShutdown.Both);
+                //socket.Shutdown(SocketShutdown.Both);
                 socket.Disconnect(true);
             }
 
