@@ -369,7 +369,7 @@ namespace PageCache.Common
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
 
             try
@@ -377,6 +377,8 @@ namespace PageCache.Common
                 socket.Connect(host, port);
                 socket.Send(headersData);
                 data = GetData(socket);
+
+                socket.Shutdown(SocketShutdown.Receive);
             }
             catch
             {
@@ -384,7 +386,6 @@ namespace PageCache.Common
             }
             finally
             {
-                //socket.Shutdown(SocketShutdown.Receive);
                 socket.Disconnect(true);
             }
 
@@ -400,25 +401,24 @@ namespace PageCache.Common
             HttpData data = null;
 
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
             try
             {
                 socket.Connect(address.Address, address.Port);
                 socket.Send(headersData);
                 data = GetData(socket);
+
+                socket.Shutdown(SocketShutdown.Both);
             }
             catch
             {
 
             }
             finally
-            {
-                //socket.Shutdown(SocketShutdown.Both);
+            {            
                 socket.Disconnect(true);
             }
 

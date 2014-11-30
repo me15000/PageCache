@@ -26,3 +26,10 @@ H:\Github\PageCache5\PageCache5\PageCache\PageCache.Store.SQLServer\bin\Release\
 H:\Github\PageCache5\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.csprojResolveAssemblyReference.cache
 H:\Github\PageCache5\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.dll
 H:\Github\PageCache5\PageCache5\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.pdb
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.csprojResolveAssemblyReference.cache
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.dll
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\obj\Release\PageCache.Store.SQLServer.pdb
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.Store.SQLServer.dll
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.Store.SQLServer.pdb
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.dll
+H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLServer\bin\Release\PageCache.pdb
