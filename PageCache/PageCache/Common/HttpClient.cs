@@ -384,10 +384,18 @@ namespace PageCache.Common
             {
 
             }
-            finally
+
+
+            try
             {
                 socket.Disconnect(true);
             }
+            catch
+            {
+
+
+            }
+             
 
 
 
@@ -417,10 +425,18 @@ namespace PageCache.Common
             {
 
             }
-            finally
-            {            
+
+
+            try
+            {
                 socket.Disconnect(true);
             }
+            catch
+            {
+
+
+            }
+
 
             return data;
         }
