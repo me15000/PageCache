@@ -100,6 +100,29 @@ namespace PageCache.Setting
             return matchRegex.IsMatch(context.Request.Path);
         }
 
+        /*
+        public List<Store.IStore> GetStores()
+        {
+
+            List<Store.IStore> stores = new List<Store.IStore>();
+            if (!string.IsNullOrEmpty(configRule.StoreName))
+            {
+                stores.Add(rules.Setting.Stores.Get(configRule.StoreName));
+
+            }
+            else
+            {
+
+                for (int i = 0; i < rules.Setting.Stores.Items.Keys.Count; i++)
+                {
+                    string key = rules.Setting.Stores.Items.Keys[i];
+
+                    stores.Add(rules.Setting.Stores.Items[key]);
+                }
+
+            }
+        }
+        */
 
         public Store.IStore GetStore()
         {

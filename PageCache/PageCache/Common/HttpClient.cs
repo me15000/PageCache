@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace PageCache.Common
 {
@@ -50,7 +51,7 @@ namespace PageCache.Common
 
         const string TRANSFER_ENCODING = "chunked";
 
-        public static string ReceiveHeaderString(Socket socket)
+        public string ReceiveHeaderString(Socket socket)
         {
 
             StringBuilder header = new StringBuilder();
@@ -87,7 +88,7 @@ namespace PageCache.Common
 
         const int BUFFER_SIZE = 16;
 
-        public static byte[] ReceiveBodyData(Socket socket, int contentLength)
+        public byte[] ReceiveBodyData(Socket socket, int contentLength)
         {
 
             byte[] data = new byte[contentLength];
@@ -117,7 +118,7 @@ namespace PageCache.Common
         }
 
 
-        public static byte[] ReceiveBodyData(Socket socket)
+        public byte[] ReceiveBodyData(Socket socket)
         {
             List<byte> list = new List<byte>();
 
@@ -157,7 +158,7 @@ namespace PageCache.Common
 
         const string CHUNKED_END_SIGN = "\r\n";
 
-        public static byte[] ParseChunkedData(byte[] data)
+        public byte[] ParseChunkedData(byte[] data)
         {
 
             int endPosition = data.Length;
@@ -289,7 +290,7 @@ namespace PageCache.Common
             return null;
         }
 
-        public static HttpData GetData(Socket socket)
+        public HttpData GetData(Socket socket)
         {
             string headerString = ReceiveHeaderString(socket);
 
@@ -335,7 +336,7 @@ namespace PageCache.Common
 
         }
 
-        int receiveTimeout = 10000;
+        int receiveTimeout = 5000;
 
         /// <summary>
         /// 接收超时默认10秒
@@ -346,7 +347,7 @@ namespace PageCache.Common
             set { receiveTimeout = value; }
         }
 
-        int sendTimeout = 3000;
+        int sendTimeout = 5000;
 
         /// <summary>
         /// 发送超时默认3秒
@@ -362,80 +363,127 @@ namespace PageCache.Common
             return GetData(host, 80, headersData);
         }
 
+        public Log ErrorLog { get; set; }
+
+
+
+
         public HttpData GetData(string host, int port, byte[] headersData)
         {
             HttpData data = null;
 
+            int times = 0;
+            int loopTimes = 2;
+
+        label:
+
+            times++;
+
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendTimeout);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, receiveTimeout);
+
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
-            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-
 
             try
             {
-                socket.Connect(host, port);
+                if (!socket.Connected)
+                {
+                    socket.Connect(host, port);
+                }
+
                 socket.Send(headersData);
                 data = GetData(socket);
 
-                socket.Shutdown(SocketShutdown.Receive);
-            }
-            catch
-            {
-
-            }
-
-
-            try
-            {
+                socket.Shutdown(SocketShutdown.Both);
                 socket.Disconnect(true);
+
             }
-            catch
+            catch (Exception ex)
             {
+                if (socket.Connected)
+                {
+                    socket.Close();
+                }
+                socket.Dispose();
 
+                if (times < loopTimes)
+                {
+                    Thread.Sleep(200);
 
+                    goto label;
+                }
             }
-             
 
-
-
+            //socket.Close();
+            //socket.Dispose();
 
             return data;
         }
 
         public HttpData GetData(IPEndPoint address, byte[] headersData)
         {
-
             HttpData data = null;
 
+            int times = 0;
+            int loopTimes = 2;
+
+        label:
+
+            times++;
+
+
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendTimeout);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, receiveTimeout);
+
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
-            //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+
 
             try
             {
-                socket.Connect(address.Address, address.Port);
+                if (!socket.Connected)
+                {
+                    socket.Connect(address.Address, address.Port);
+
+                }
                 socket.Send(headersData);
                 data = GetData(socket);
 
                 socket.Shutdown(SocketShutdown.Both);
-            }
-            catch
-            {
-
-            }
-
-
-            try
-            {
                 socket.Disconnect(true);
+
             }
-            catch
+            catch (Exception ex)
             {
+                if (socket.Connected)
+                {
+                    socket.Close();
+                }
 
+                socket.Dispose();
 
+                if (times < loopTimes)
+                {
+                    Thread.Sleep(200);
+
+                    goto label;
+                }
             }
+
+            //socket.Close();
+            //socket.Dispose();
+
 
 
             return data;

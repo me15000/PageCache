@@ -71,7 +71,7 @@ namespace PageCache.Store.SQLServer
 
             if (rnd.Next(0, 3) == 0)
             {
-                dbh.ExecuteNoneQuery("delete from [" + tableName + "]  where ExpiresAbsolute < GetDate() - 1");
+                dbh.ExecuteNoneQuery("delete from [" + tableName + "]  where ExpiresAbsolute < GetDate() - 7");
             }
 
         }

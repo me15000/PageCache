@@ -35,7 +35,7 @@ namespace PageCache.Store
             for (int i = 0; i < datalist.Count; i++)
             {
                 var entity = datalist[i];
-                if (entity.Key.Equals(key) && entity.Type.Equals(type))
+                if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
                 {
                     return entity;
                 }
@@ -46,13 +46,14 @@ namespace PageCache.Store
 
         public void Add(IStore store, StoreData data)
         {
+            /*
             var foundEntity = Find(data.Type, data.Key);
 
             if (foundEntity != null)
             {
                 this.datalist.Remove(foundEntity);
             }
-
+            */
 
 
             StoreDataEntity entity = new StoreDataEntity
@@ -77,7 +78,7 @@ namespace PageCache.Store
             };
 
 
-          
+
 
             this.datalist.Add(entity);
 
@@ -94,8 +95,8 @@ namespace PageCache.Store
 
             if (this.datalist.Count >= capacity)
             {
-                ThreadPool.QueueUserWorkItem(SaveAsync, null);
-                //SaveAsync(null);
+                //ThreadPool.QueueUserWorkItem(SaveAsync, null);
+                SaveAsync(null);
             }
         }
 
@@ -140,7 +141,7 @@ namespace PageCache.Store
             for (int i = 0; i < datalist.Count; i++)
             {
                 var entity = datalist[i];
-                if (entity.Key.Equals(key) && entity.Type.Equals(type))
+                if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
                 {
                     return entity;
                 }

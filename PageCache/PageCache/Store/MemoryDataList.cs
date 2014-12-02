@@ -127,8 +127,8 @@ namespace PageCache.Store
             if (ts > clearSeconds || this.datalist.Count >= this.capacity)
             {
 
-                ThreadPool.QueueUserWorkItem(ClearAsync, null);
-                //ClearAsync(null);
+                //ThreadPool.QueueUserWorkItem(ClearAsync, null);
+                ClearAsync(null);
             }
         }
 
