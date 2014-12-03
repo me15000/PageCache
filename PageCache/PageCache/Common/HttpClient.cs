@@ -375,7 +375,7 @@ namespace PageCache.Common
             int times = 0;
             int loopTimes = 2;
 
-        label:
+        loop:
 
             times++;
 
@@ -383,6 +383,7 @@ namespace PageCache.Common
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendTimeout);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, receiveTimeout);
 
@@ -415,7 +416,7 @@ namespace PageCache.Common
                 {
                     Thread.Sleep(200);
 
-                    goto label;
+                    goto loop;
                 }
             }
 
@@ -432,13 +433,11 @@ namespace PageCache.Common
             int times = 0;
             int loopTimes = 2;
 
-        label:
+        loop:
 
             times++;
 
-
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -449,14 +448,13 @@ namespace PageCache.Common
             socket.ReceiveTimeout = receiveTimeout;
             socket.SendTimeout = sendTimeout;
 
-
             try
             {
                 if (!socket.Connected)
                 {
                     socket.Connect(address.Address, address.Port);
-
                 }
+
                 socket.Send(headersData);
                 data = GetData(socket);
 
@@ -477,14 +475,12 @@ namespace PageCache.Common
                 {
                     Thread.Sleep(200);
 
-                    goto label;
+                    goto loop;
                 }
             }
 
             //socket.Close();
             //socket.Dispose();
-
-
 
             return data;
         }

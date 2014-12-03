@@ -100,29 +100,25 @@ namespace PageCache.Setting
             return matchRegex.IsMatch(context.Request.Path);
         }
 
-        /*
+ 
         public List<Store.IStore> GetStores()
         {
-
             List<Store.IStore> stores = new List<Store.IStore>();
             if (!string.IsNullOrEmpty(configRule.StoreName))
             {
                 stores.Add(rules.Setting.Stores.Get(configRule.StoreName));
-
             }
             else
             {
-
-                for (int i = 0; i < rules.Setting.Stores.Items.Keys.Count; i++)
+                foreach (Store.IStore item in rules.Setting.Stores.Items.Values)
                 {
-                    string key = rules.Setting.Stores.Items.Keys[i];
-
-                    stores.Add(rules.Setting.Stores.Items[key]);
+                    stores.Add(item);
                 }
-
             }
+
+            return stores;
         }
-        */
+ 
 
         public Store.IStore GetStore()
         {
@@ -132,8 +128,12 @@ namespace PageCache.Setting
             }
             else
             {
+                //return rules.Setting.Stores.Get("default");
                 return rules.Setting.Stores.GetRandom();
             }
+          
+
+
         }
 
 

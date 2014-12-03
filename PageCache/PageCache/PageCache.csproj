@@ -64,6 +64,8 @@
     <Compile Include="Store\IStore.cs" />
     <Compile Include="Store\LastReadDataList.cs" />
     <Compile Include="Store\MemoryDataList.cs" />
+    <Compile Include="Store\SQLServer\SQLServerHelper.cs" />
+    <Compile Include="Store\SQLServer\SQLServerStore.cs" />
     <Compile Include="Store\StoreData.cs" />
     <Compile Include="Store\StoreDataInfo.cs" />
     <Compile Include="Store\StoreDataList.cs" />

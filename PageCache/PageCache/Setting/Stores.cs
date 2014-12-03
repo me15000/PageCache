@@ -17,30 +17,51 @@ namespace PageCache.Setting
         {
             get { return stores; }
         }
+       
 
 
         public Stores(Setting setting)
         {
             this.setting = setting;
+         
+              stores = new Dictionary<string, Store.IStore>(setting.Config.Stores.Count);
 
-            stores = new Dictionary<string, Store.IStore>(setting.Config.Stores.Count);
+              for (int i = 0; i < setting.Config.Stores.Count; i++)
+              {
+                  Config.Store configStore = setting.Config.Stores[i];           
+     
+                  Store.IStore store = Store.Factory.CreateInstance(configStore);
 
-
-            for (int i = 0; i < setting.Config.Stores.Count; i++)
-            {
-                Config.Store configStore = setting.Config.Stores[i];
-
-                Store.IStore store = Store.Factory.CreateInstance(configStore);
-
-                stores.Add(configStore.Name, store);
-            }
+                  stores.Add(configStore.Name, store);
+              }
+             
         }
-
-
 
         public Store.IStore Get(string storeName)
         {
+         
+
+
             return stores[storeName];
+
+            /*
+            if (setting.Config.Stores.Count > 0)
+            {
+                for (int i = 0; i < setting.Config.Stores.Count; i++)
+                {
+                    Config.Store configStore = setting.Config.Stores[i];
+
+                    if (configStore.Name.Equals(storeName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Store.Factory.CreateInstance(configStore);
+                    }
+                }
+
+                return Store.Factory.CreateInstance(setting.Config.Stores[0]);
+            }
+
+            return null;*/
+
         }
 
 
@@ -86,7 +107,7 @@ namespace PageCache.Setting
         }
 
 
-
+   
 
 
     }

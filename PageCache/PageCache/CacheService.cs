@@ -11,9 +11,9 @@ namespace PageCache
     {
         Setting.Setting setting;
 
-        //Store.MemoryDataList memoryDataList = null;
+        Store.MemoryDataList memoryDataList = null;
 
-        //Store.LastReadDataList lastReadDataList = null;
+        Store.LastReadDataList lastReadDataList = null;
 
         Store.StoreDataList storeDataList = null;
 
@@ -36,23 +36,19 @@ namespace PageCache
 
             var config = setting.Config;
 
+            this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
 
-            //this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
-
-            //this.lastReadDataList = new Store.LastReadDataList(config.StoreBufferSize);
+            this.lastReadDataList = new Store.LastReadDataList(config.StoreBufferSize);
 
             this.storeDataList = new Store.StoreDataList(config.StoreBufferSize);
 
             this.requestQueue = new RequestQueue();
 
-
             this.httpClient = new Common.HttpClient();
-
 
             this.httpClient.ReceiveTimeout = config.NetReceiveTimeout;
 
             this.httpClient.SendTimeout = config.NetSendTimeout;
-
 
             if (!string.IsNullOrEmpty(config.ErrorLogPath))
             {
@@ -110,7 +106,6 @@ namespace PageCache
                         if (errorLog != null)
                         {
                             errorLog.Write("The system is busy now. Please try later.");
-
                         }
                     }
 
@@ -134,7 +129,7 @@ namespace PageCache
             if (!hasRefreshKey)
             {
                 //尝试从内存中读缓存
-                /*
+               
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     data = memoryDataList.Get(info.Type, info.Key);
@@ -161,11 +156,11 @@ namespace PageCache
                         }
                     }
                 }
-                */
+                
 
 
                 //尝试从最后的数据列中读取缓存
-                /*
+               
                 data = lastReadDataList.Get(info.Type, info.Key);
 
                 if (data != null)
@@ -188,7 +183,7 @@ namespace PageCache
                         }
                     }
                 }
-                */
+               
 
                 //尝试从StoreDataList 中读取缓存
 
@@ -225,7 +220,7 @@ namespace PageCache
                     {
                         olddata = data;
 
-                        /*
+                       
                         lastReadDataList.Add(data);
                         //如果启用了内存并且达到并发数量时,使用内存缓存
                         if (info.Rule.ConfigRule.MemoryEnable)
@@ -237,7 +232,7 @@ namespace PageCache
                                 memoryDataList.Add(data);
                             }
                         }
-                        */
+                      
 
                         if (setting.Config.ReadOnly)
                         {
@@ -298,17 +293,6 @@ namespace PageCache
                 }
             }
 
-            if (olddata == null && outdata == null)
-            {
-
-                if (errorLog != null)
-                {
-                    errorLog.Write("olddata is null and outdata is null \r\n" + info.ToString());
-
-                }
-            }
-
-
             return false;
         }
 
@@ -316,10 +300,7 @@ namespace PageCache
 
         bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
         {
-
-
             outdata = null;
-
 
             bool createResult = false;
 
@@ -359,17 +340,8 @@ namespace PageCache
             {
                 outdata = newdata;
 
-                //lastReadDataList.Add(newdata);
-                /*
-                var store = info.Store;
+                lastReadDataList.Add(newdata);
 
-                if (store != null)
-                {
-                    storeDataList.Add(store, newdata);
-                    //store.Save(newdata);
-                }
-                */
-                /*
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     if (memoryDataList.Get(info.Type, info.Key) != null)
@@ -377,7 +349,7 @@ namespace PageCache
                         memoryDataList.Add(newdata);
                     }
                 }
-                */
+       
 
                 createResult = true;
             }
@@ -430,15 +402,28 @@ namespace PageCache
                             {
                                 if (data.HeadersData.Length > 0)
                                 {
-                                    if (data.Seconds > 0)
+                                    if (data.Seconds > 0 && data.BodyData.Length >= 0)
                                     {
-                                        Store.IStore store = info.Rule.GetStore();
 
-                                        if (store != null && data.BodyData.Length >= 0)
+                                        //Store.IStore store = info.Store;
+
+                                        this.storeDataList.Add(info.Store, data);
+
+
+                                        /*
+                                        List<Store.IStore> stores = info.Rule.GetStores();
+
+                                        for (int i = 0; i < stores.Count; i++)
                                         {
-                                            //store.Save(data);
-                                            this.storeDataList.Add(store, data);
-                                        }
+                                            Store.IStore store = stores[i];
+
+                                            if (store != null)
+                                            {
+                                                //store.Save(data);
+                                                this.storeDataList.Add(store, data);
+                                            }
+                                        }*/
+
                                     }
 
                                     return data;
