@@ -46,14 +46,14 @@ namespace PageCache.Store
 
         public void Add(IStore store, StoreData data)
         {
-            /*
+         
             var foundEntity = Find(data.Type, data.Key);
 
             if (foundEntity != null)
             {
                 this.datalist.Remove(foundEntity);
             }
-            */
+ 
 
 
             StoreDataEntity entity = new StoreDataEntity
