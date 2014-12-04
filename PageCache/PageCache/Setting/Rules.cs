@@ -41,6 +41,7 @@ namespace PageCache.Setting
                 if (rule.IsMatch(context))
                 {
 
+
                     return rule;
 
                 }
@@ -59,6 +60,13 @@ namespace PageCache.Setting
         public Regex MatchRegex
         {
             get { return matchRegex; }
+        }
+
+
+        Regex skipRegex;
+        public Regex SkipRegex
+        {
+            get { return skipRegex; }
         }
 
 
@@ -92,15 +100,29 @@ namespace PageCache.Setting
             this.configRule = configRule;
 
             matchRegex = new Regex(configRule.Match, configRule.IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+
+            if (configRule.Skip != null)
+            {
+                skipRegex = new Regex(configRule.Skip, configRule.IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+            }
+
         }
 
 
         public bool IsMatch(HttpContext context)
         {
+            if (skipRegex != null)
+            {
+                if (skipRegex.IsMatch(context.Request.Path))
+                {
+                    return false;
+                }
+            }
+
             return matchRegex.IsMatch(context.Request.Path);
         }
 
- 
+
         public List<Store.IStore> GetStores()
         {
             List<Store.IStore> stores = new List<Store.IStore>();
@@ -118,7 +140,7 @@ namespace PageCache.Setting
 
             return stores;
         }
- 
+
 
         public Store.IStore GetStore()
         {
@@ -131,7 +153,7 @@ namespace PageCache.Setting
                 //return rules.Setting.Stores.Get("default");
                 return rules.Setting.Stores.GetRandom();
             }
-          
+
 
 
         }

@@ -224,6 +224,11 @@ namespace PageCache.Config
         [XmlAttribute("ignoreCase"), DefaultSettingValue("true")]
         public bool IgnoreCase { get; set; }
 
+
+        [XmlAttribute("skip")]
+        public string Skip { get; set; }
+
+
         [XmlAttribute("action")]
         public string Action { get; set; }
 
