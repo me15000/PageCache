@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -284,13 +285,6 @@ namespace PageCache
 
             if (TryCreateData(info, olddata, out outdata))
             {
-                /*
-                if (info.Store != null)
-                {
-                    info.Store.Delete(info.Type, info.Key);
-                }
-                */
-
                 if (accessLog != null)
                 {
                     accessLog.Write("TryCreateData success");
@@ -309,7 +303,10 @@ namespace PageCache
             return false;
         }
 
-        Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
+
+        Hashtable creatingDataList = new Hashtable(100);
+
+        //Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
 
         bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
         {
@@ -321,30 +318,21 @@ namespace PageCache
 
             if (creatingDataList.ContainsKey(creatingKey))
             {
+                object data = creatingDataList[creatingKey];
 
-                outdata = creatingDataList[creatingKey];
-
-                if (outdata == null)
+                if (data != null)
                 {
-                    outdata = olddata;
-
-                    return false;
-                }
-            }
-
-
-            if (olddata != null)
-            {
-                if (creatingDataList.ContainsKey(creatingKey))
-                {
-                    creatingDataList[creatingKey] = olddata;
+                    outdata = (Store.StoreData)data;
                 }
                 else
                 {
-                    creatingDataList.Add(creatingKey, olddata);
+                    outdata = olddata;
                 }
+
+                return false;
             }
 
+            creatingDataList[creatingKey] = olddata;
 
 
             Store.StoreData newdata = CreateData(info);
@@ -363,15 +351,12 @@ namespace PageCache
                     }
                 }
 
-
                 createResult = true;
             }
             else
             {
                 outdata = olddata;
             }
-
-
 
             if (creatingDataList.ContainsKey(creatingKey))
             {
@@ -380,10 +365,6 @@ namespace PageCache
 
             return createResult;
         }
-
-
-
-
 
         Store.StoreData CreateData(RequestInfo info)
         {
