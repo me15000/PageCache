@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.MongoDB", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.MySql", "PageCache.Store.MySql\PageCache.Store.MySql.csproj", "{BC586B3B-6371-41E9-8C79-EA3BDC80DF04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.SQLServer", "PageCache.Store.SQLServer\PageCache.Store.SQLServer.csproj", "{A0B01511-8529-4B2F-B989-B0C87000786B}"
-EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PageCacheWeb(1)", "http://localhost:1833", "{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}"
 	ProjectSection(WebsiteProperties) = preProject
 		UseIISExpress = "true"
@@ -51,10 +49,6 @@ Global
 		{BC586B3B-6371-41E9-8C79-EA3BDC80DF04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC586B3B-6371-41E9-8C79-EA3BDC80DF04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC586B3B-6371-41E9-8C79-EA3BDC80DF04}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0B01511-8529-4B2F-B989-B0C87000786B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0B01511-8529-4B2F-B989-B0C87000786B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0B01511-8529-4B2F-B989-B0C87000786B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0B01511-8529-4B2F-B989-B0C87000786B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}.Release|Any CPU.ActiveCfg = Debug|Any CPU

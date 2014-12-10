@@ -22,8 +22,18 @@ namespace PageCache
         Common.HttpClient httpClient;
 
         Common.Log errorLog = null;
+        public Common.Log ErrorLog
+        {
+            get { return errorLog; }
+        }
 
         Common.Log accessLog = null;
+        public Common.Log AccessLog
+        {
+            get { return accessLog; }
+        }
+
+
 
         CacheModule module = null;
 
@@ -41,6 +51,8 @@ namespace PageCache
             this.lastReadDataList = new Store.LastReadDataList(config.StoreBufferSize);
 
             this.storeDataList = new Store.StoreDataList(config.StoreBufferSize);
+
+
 
             this.requestQueue = new RequestQueue();
 
@@ -62,6 +74,7 @@ namespace PageCache
             {
                 this.accessLog = new Common.Log(config.AccessLogPath);
             }
+
         }
 
 
@@ -129,7 +142,7 @@ namespace PageCache
             if (!hasRefreshKey)
             {
                 //尝试从内存中读缓存
-               
+
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     data = memoryDataList.Get(info.Type, info.Key);
@@ -156,11 +169,11 @@ namespace PageCache
                         }
                     }
                 }
-                
+
 
 
                 //尝试从最后的数据列中读取缓存
-               
+
                 data = lastReadDataList.Get(info.Type, info.Key);
 
                 if (data != null)
@@ -183,7 +196,7 @@ namespace PageCache
                         }
                     }
                 }
-               
+
 
                 //尝试从StoreDataList 中读取缓存
 
@@ -220,7 +233,7 @@ namespace PageCache
                     {
                         olddata = data;
 
-                       
+
                         lastReadDataList.Add(data);
                         //如果启用了内存并且达到并发数量时,使用内存缓存
                         if (info.Rule.ConfigRule.MemoryEnable)
@@ -232,7 +245,7 @@ namespace PageCache
                                 memoryDataList.Add(data);
                             }
                         }
-                      
+
 
                         if (setting.Config.ReadOnly)
                         {
@@ -349,7 +362,7 @@ namespace PageCache
                         memoryDataList.Add(newdata);
                     }
                 }
-       
+
 
                 createResult = true;
             }
@@ -404,26 +417,7 @@ namespace PageCache
                                 {
                                     if (data.Seconds > 0 && data.BodyData.Length >= 0)
                                     {
-
-                                        //Store.IStore store = info.Store;
-
                                         this.storeDataList.Add(info.Store, data);
-
-
-                                        /*
-                                        List<Store.IStore> stores = info.Rule.GetStores();
-
-                                        for (int i = 0; i < stores.Count; i++)
-                                        {
-                                            Store.IStore store = stores[i];
-
-                                            if (store != null)
-                                            {
-                                                //store.Save(data);
-                                                this.storeDataList.Add(store, data);
-                                            }
-                                        }*/
-
                                     }
 
                                     return data;

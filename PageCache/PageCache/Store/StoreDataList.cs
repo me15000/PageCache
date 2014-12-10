@@ -23,7 +23,9 @@ namespace PageCache.Store
         }
 
 
-        public StoreDataList(int capacity)
+
+
+        public StoreDataList( int capacity)
         {
             this.capacity = capacity;
             this.datalist = new List<StoreDataEntity>(capacity);
@@ -46,14 +48,14 @@ namespace PageCache.Store
 
         public void Add(IStore store, StoreData data)
         {
-         
+
             var foundEntity = Find(data.Type, data.Key);
 
             if (foundEntity != null)
             {
                 this.datalist.Remove(foundEntity);
             }
- 
+
 
 
             StoreDataEntity entity = new StoreDataEntity
@@ -104,37 +106,32 @@ namespace PageCache.Store
         bool isSaving = false;
         void SaveAsync(object o)
         {
-
-
             if (isSaving)
             {
                 return;
             }
 
             isSaving = true;
-
-
-
             DateTime date = DateTime.Now;
 
+            StoreDataEntity[] array = datalist.ToArray();
+            datalist.Clear();
 
-            for (int i = 0; i < datalist.Count; i++)
+            for (int i = 0; i < array.Length; i++)
             {
-                StoreDataEntity entity = datalist[i];
+                StoreDataEntity entity = array[i];
 
                 if (entity.ExpiresAbsolute > date)
                 {
-                    entity.Store.Save(entity);
+                    if (entity.Store != null)
+                    {
+                        entity.Store.Save(entity);
+                    }
                 }
-
-                datalist.Remove(entity);
             }
-
 
             isSaving = false;
         }
-
-
 
         StoreDataEntity Find(string type, string key)
         {

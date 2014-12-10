@@ -150,9 +150,13 @@ namespace PageCache.Store
 
             prevClearTime = now;
 
-            for (int i = 0; i < datalist.Count; i++)
+
+            MemoryDataEntity[] array = datalist.ToArray();
+            datalist.Clear();
+
+            for (int i = 0; i < array.Length; i++)
             {
-                var entity = datalist[i];
+                var entity = array[i];
 
                 double its = (now - entity.LastReadDate).TotalSeconds;
 
