@@ -34,7 +34,20 @@ namespace PageCache.Store
             return null;
         }
 
+        public void Delete(string type, string key)
+        {
+            for (int i = 0; i < datalist.Count; i++)
+            {
+                var entity = datalist[i];
+                if (entity.Key.Equals(key) && entity.Type.Equals(type))
+                {
 
+                    datalist.Remove(entity);
+
+                    return;
+                }
+            }
+        }
 
         public void Add(StoreData data)
         {

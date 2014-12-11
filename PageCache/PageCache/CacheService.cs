@@ -285,6 +285,18 @@ namespace PageCache
 
             if (TryCreateData(info, olddata, out outdata))
             {
+
+                if (info.Store != null)
+                {
+                    info.Store.Delete(info.Type, info.Key);
+                }
+
+
+                this.lastReadDataList.Delete(info.Type, info.Key);
+
+                this.memoryDataList.Delete(info.Type, info.Key);
+
+
                 if (accessLog != null)
                 {
                     accessLog.Write("TryCreateData success");
