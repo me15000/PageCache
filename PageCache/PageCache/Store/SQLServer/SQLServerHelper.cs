@@ -64,32 +64,47 @@ namespace PageCache.Store.SQLServer
         public T ExecuteScalar<T>(string sql, params SqlParameter[] parameters)
         {
 
-            using (SqlConnection connection = CreateConnection())
-            {
-                SqlCommand cmd = CreateCommand();
-                cmd.Connection = connection;
-                cmd.CommandText = sql;
-                cmd.Parameters.AddRange(parameters);
-                connection.Open();
-                object o = cmd.ExecuteScalar();
-                connection.Close();
-                return (T)Convert.ChangeType(o, typeof(T));
-            }
+            object o = ExecuteScalar(sql, parameters);
+
+            return (T)Convert.ChangeType(o, typeof(T));
         }
+
 
         public object ExecuteScalar(string sql, params SqlParameter[] parameters)
         {
-            using (SqlConnection connection = CreateConnection())
+            SqlConnection connection = CreateConnection();
+
+            SqlCommand cmd = CreateCommand();
+            cmd.Connection = connection;
+            cmd.CommandText = sql;
+            cmd.Parameters.AddRange(parameters);
+
+            object o = null;
+
+            try
             {
-                SqlCommand cmd = CreateCommand();
-                cmd.Connection = connection;
-                cmd.CommandText = sql;
-                cmd.Parameters.AddRange(parameters);
                 connection.Open();
-                object o = cmd.ExecuteScalar();
-                connection.Close();
-                return o;
+
+                o = cmd.ExecuteScalar();
+
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                cmd.Dispose();
+
+                if (connection.State != ConnectionState.Closed)
+                {
+                    connection.Close();
+                }
+                connection.Dispose();
+            }
+
+            return o;
+
         }
 
 
@@ -103,22 +118,45 @@ namespace PageCache.Store.SQLServer
             cmd.Parameters.AddRange(parameters);
             connection.Open();
             return cmd.ExecuteReader(CommandBehavior.CloseConnection);
+
         }
 
         public int ExecuteNoneQuery(string sql, params SqlParameter[] parameters)
         {
-            using (SqlConnection connection = CreateConnection())
+            int num = -1;
+            SqlConnection connection = CreateConnection();
+
+            SqlCommand cmd = CreateCommand();
+            cmd.Connection = connection;
+            cmd.CommandText = sql;
+            cmd.Parameters.AddRange(parameters);
+
+            try
             {
 
-                SqlCommand cmd = CreateCommand();
-                cmd.Connection = connection;
-                cmd.CommandText = sql;
-                cmd.Parameters.AddRange(parameters);
                 connection.Open();
-                int num = cmd.ExecuteNonQuery();
-                connection.Close();
-                return num;
+                num = cmd.ExecuteNonQuery();
+
+
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+
+                cmd.Dispose();
+
+                if (connection.State != ConnectionState.Closed)
+                {
+                    connection.Close();
+                }
+
+                connection.Dispose();
+            }
+
+            return num;
         }
 
 

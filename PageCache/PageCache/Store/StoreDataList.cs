@@ -25,7 +25,7 @@ namespace PageCache.Store
 
 
 
-        public StoreDataList( int capacity)
+        public StoreDataList(int capacity)
         {
             this.capacity = capacity;
             this.datalist = new List<StoreDataEntity>(capacity);
@@ -112,22 +112,35 @@ namespace PageCache.Store
             }
 
             isSaving = true;
+
+
             DateTime date = DateTime.Now;
 
             StoreDataEntity[] array = datalist.ToArray();
             datalist.Clear();
 
-            for (int i = 0; i < array.Length; i++)
-            {
-                StoreDataEntity entity = array[i];
+            int endIndex = 0;
 
-                if (entity.ExpiresAbsolute > date)
+            try
+            {
+                for (int i = 0; i < array.Length; i++)
                 {
-                    if (entity.Store != null)
+                    StoreDataEntity entity = array[i];
+
+                    if (entity.ExpiresAbsolute > date)
                     {
-                        entity.Store.Save(entity);
+                        if (entity.Store != null)
+                        {
+                            entity.Store.Save(entity);
+
+                            endIndex = i;
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {               
+                
             }
 
             isSaving = false;

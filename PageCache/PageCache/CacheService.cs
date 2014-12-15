@@ -119,7 +119,7 @@ namespace PageCache
 
                         if (errorLog != null)
                         {
-                            errorLog.Write("The system is busy now. Please try later.");
+                            errorLog.Write("The system is busy now. Please try later.\r\n" + info.ToString());
                         }
                     }
 

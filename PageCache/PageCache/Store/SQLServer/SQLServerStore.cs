@@ -43,7 +43,7 @@ namespace PageCache.Store.SQLServer
         {
 
             string tableName = getTableName(data.Key);
-            
+
             if (Exists(data.Type, data.Key))
             {
                 dbh.ExecuteNoneQuery("update [" + tableName + "] set [HeadersData]=@HeadersData,[BodyData]=@BodyData,[CreatedDate]=@CreatedDate,[ExpiresAbsolute]=@ExpiresAbsolute,[Seconds]=@Seconds where [KEY]=@KEY and [Type]=@Type"
@@ -62,19 +62,23 @@ namespace PageCache.Store.SQLServer
             }
             else
             {
-                dbh.ExecuteNoneQuery("insert into [" + tableName + "]([KEY],[Type],[HeadersData],[BodyData],[CreatedDate],[ExpiresAbsolute],[Seconds]) values(@KEY,@Type,@HeadersData,@BodyData,@CreatedDate,@ExpiresAbsolute,@Seconds);"
-                   , dbh.CreateParameter("@KEY", data.Key)
-                   , dbh.CreateParameter("@Type", data.Type)
 
-                   /*二进制数据*/
-                   , dbh.CreateParameter("@HeadersData", data.HeadersData)
-                   , dbh.CreateParameter("@BodyData", data.BodyData)
+                dbh.ExecuteNoneQuery("insert into [" + tableName + "]([KEY],[Type],[HeadersData],[BodyData],[CreatedDate],[ExpiresAbsolute],[Seconds]) values(@KEY,@Type,@HeadersData,@BodyData,@CreatedDate,@ExpiresAbsolute,@Seconds);"
+                , dbh.CreateParameter("@KEY", data.Key)
+                , dbh.CreateParameter("@Type", data.Type)
+
+                /*二进制数据*/
+                , dbh.CreateParameter("@HeadersData", data.HeadersData)
+                , dbh.CreateParameter("@BodyData", data.BodyData)
                     /*end 二进制数据*/
 
-                   , dbh.CreateParameter("@CreatedDate", data.CreatedDate)
-                   , dbh.CreateParameter("@ExpiresAbsolute", data.ExpiresAbsolute)
-                   , dbh.CreateParameter("@Seconds", data.Seconds)
-                   );
+                , dbh.CreateParameter("@CreatedDate", data.CreatedDate)
+                , dbh.CreateParameter("@ExpiresAbsolute", data.ExpiresAbsolute)
+                , dbh.CreateParameter("@Seconds", data.Seconds)
+                );
+
+
+
             }
 
 
