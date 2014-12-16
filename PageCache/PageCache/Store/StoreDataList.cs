@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Web;
 
 namespace PageCache.Store
 {
@@ -14,7 +15,14 @@ namespace PageCache.Store
     public class StoreDataList
     {
 
-        List<StoreDataEntity> datalist = null;
+        const string CACHE_KEY = "StoreDataList";
+
+        // List<StoreDataEntity> datalist = null;
+
+        public List<StoreDataEntity> DataList
+        {
+            get { return GetCacheDataList(); }
+        }
 
         int capacity = 10;
         public int Capacity
@@ -22,38 +30,82 @@ namespace PageCache.Store
             get { return capacity; }
         }
 
-
-
-
         public StoreDataList(int capacity)
         {
             this.capacity = capacity;
-            this.datalist = new List<StoreDataEntity>(capacity);
         }
-
 
         public StoreData Get(string type, string key)
         {
+            return Find(type, key);
+        }
+
+        StoreDataEntity Find(string type, string key)
+        {
+            var datalist = GetCacheDataList();
+            return Find(datalist, type, key);
+        }
+
+        StoreDataEntity Find(List<StoreDataEntity> datalist, string type, string key)
+        {
+            if (datalist == null)
+            {
+                return null;
+            }
+
             for (int i = 0; i < datalist.Count; i++)
             {
                 var entity = datalist[i];
-                if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+                if (entity != null)
                 {
-                    return entity;
+                    if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return entity;
+                    }
                 }
+
             }
             return null;
         }
 
 
+        List<StoreDataEntity> GetCacheDataList()
+        {
+            List<StoreDataEntity> datalist = null;
+
+            object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY);
+
+            if (cacheObject == null)
+            {
+                datalist = new List<StoreDataEntity>(this.capacity);
+
+                HttpContext.Current.Cache.Insert(CACHE_KEY, datalist);
+            }
+            else
+            {
+                datalist = (List<StoreDataEntity>)cacheObject;
+            }
+
+            return datalist;
+        }
+
+
+        bool isSaving = false;
+
         public void Add(IStore store, StoreData data)
         {
+            var datalist = GetCacheDataList();
 
-            var foundEntity = Find(data.Type, data.Key);
+            if (datalist == null)
+            {
+                return;
+            }
+
+            var foundEntity = Find(datalist, data.Type, data.Key);
 
             if (foundEntity != null)
             {
-                this.datalist.Remove(foundEntity);
+                datalist.Remove(foundEntity);
             }
 
 
@@ -79,31 +131,20 @@ namespace PageCache.Store
 
             };
 
+            datalist.Add(entity);
 
-
-
-            this.datalist.Add(entity);
-
-            Save();
-        }
-
-        void Save()
-        {
-            if (isSaving)
+            if (datalist.Count >= capacity)
             {
-                return;
-            }
-
-
-            if (this.datalist.Count >= capacity)
-            {
-                //ThreadPool.QueueUserWorkItem(SaveAsync, null);
-                SaveAsync(null);
+                StoreDataEntity[] array = datalist.ToArray();
+                ThreadPool.QueueUserWorkItem(SaveAsync, array);
+                datalist.Clear();
+                //SaveAsync(datalist);
             }
         }
 
 
-        bool isSaving = false;
+
+
         void SaveAsync(object o)
         {
             if (isSaving)
@@ -116,47 +157,36 @@ namespace PageCache.Store
 
             DateTime date = DateTime.Now;
 
-            StoreDataEntity[] array = datalist.ToArray();
-            datalist.Clear();
+            StoreDataEntity[] array = (StoreDataEntity[])o;
 
-            int endIndex = 0;
-
-            try
+            if (array != null)
             {
-                for (int i = 0; i < array.Length; i++)
+                try
                 {
-                    StoreDataEntity entity = array[i];
-
-                    if (entity.ExpiresAbsolute > date)
+                    for (int i = 0; i < array.Length; i++)
                     {
-                        if (entity.Store != null)
-                        {
-                            entity.Store.Save(entity);
+                        StoreDataEntity entity = array[i];
 
-                            endIndex = i;
+                        if (entity.ExpiresAbsolute > date)
+                        {
+                            if (entity.Store != null)
+                            {
+                                entity.Store.Save(entity);
+
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+
+                }
             }
-            catch (Exception ex)
-            {               
-                
-            }
+
 
             isSaving = false;
         }
 
-        StoreDataEntity Find(string type, string key)
-        {
-            for (int i = 0; i < datalist.Count; i++)
-            {
-                var entity = datalist[i];
-                if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
-                {
-                    return entity;
-                }
-            }
-            return null;
-        }
+
     }
 }

@@ -34,9 +34,12 @@ namespace PageCache
             get { return accessLog; }
         }
 
+        const string STATUS_KEY = "__status__";
 
 
         CacheModule module = null;
+
+
 
 
         public CacheService(Setting.Setting setting, CacheModule module)
@@ -68,7 +71,6 @@ namespace PageCache
                 this.errorLog = new Common.Log(config.ErrorLogPath);
 
                 this.httpClient.ErrorLog = this.errorLog;
-
             }
 
             if (!string.IsNullOrEmpty(config.AccessLogPath))
@@ -87,9 +89,66 @@ namespace PageCache
             }
         }
 
+        public void EchoStatus(HttpContext context)
+        {
+
+            context.Response.ContentType = "text/plain";
+
+            string type = context.Request.QueryString["type"] ?? "all";
+
+            if (type.IndexOf("all") >= 0 || type.IndexOf("mem") >= 0)
+            {
+
+                var datalist = memoryDataList.DataList;
+
+                context.Response.Write("[memoryDataList,Count:" + datalist.Count + ",Capacity:" + memoryDataList.Capacity + "]:\r\n");
+
+                foreach (var item in datalist)
+                {
+
+                    context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
+                }
+            }
+
+            if (type.IndexOf("all") >= 0 || type.IndexOf("last") >= 0)
+            {
+                var datalist = lastReadDataList.DataList;
+
+                context.Response.Write("[lastReadDataList,Count:" + datalist.Count + ",Capacity:" + lastReadDataList.Capacity + "]:\r\n");
+
+                foreach (var item in datalist)
+                {
+                    context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
+                }
+
+            }
+
+            if (type.IndexOf("all") >= 0 || type.IndexOf("store") >= 0)
+            {
+                var datalist = storeDataList.DataList;
+
+                context.Response.Write("[storeDataList,Count:" + datalist.Count + ",Capacity:" + storeDataList.Capacity + "]:\r\n");
+
+                foreach (var item in datalist)
+                {
+                    context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
+                }
+
+            }
+
+
+            context.ApplicationInstance.CompleteRequest();
+        }
 
         public void Process(HttpContext context)
         {
+
+            if (context.Request.RawUrl.IndexOf(STATUS_KEY) >= 0)
+            {
+                EchoStatus(context);
+                return;
+            }
+
             var rule = setting.Rules.Get(context);
 
             if (rule != null)
@@ -106,6 +165,8 @@ namespace PageCache
 
                 if (info != null)
                 {
+
+
                     requestQueue.In(info);
 
                     if (accessLog != null)
@@ -132,8 +193,12 @@ namespace PageCache
         bool EchoData(RequestInfo info)
         {
 
+
+
+
+
             Store.StoreData olddata = null;
-            Store.StoreData data = null;
+
             //强制刷新缓存
             bool hasRefreshKey = info.Context.Request.RawUrl.IndexOf(setting.Config.RefreshKey) >= 0
                                     || info.Context.Request.Headers.AllKeys.Contains(setting.Config.RefreshKey);
@@ -146,7 +211,7 @@ namespace PageCache
 
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
-                    data = memoryDataList.Get(info.Type, info.Key);
+                    Store.StoreData data = memoryDataList.Get(info.Type, info.Key);
 
 
                     if (data != null)
@@ -175,60 +240,67 @@ namespace PageCache
 
                 //尝试从最后的数据列中读取缓存
 
-                data = lastReadDataList.Get(info.Type, info.Key);
-
-                if (data != null)
+                if (true)
                 {
-                    olddata = data;
+                    Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
 
-                    if (setting.Config.ReadOnly)
+                    if (data != null)
                     {
-                        if (EchoData(info.Context, data))
+                        olddata = data;
+
+                        if (setting.Config.ReadOnly)
                         {
-                            return true;
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
                         }
-                    }
 
-                    if (data.ExpiresAbsolute > DateTime.Now)
-                    {
-                        if (EchoData(info.Context, data))
+                        if (data.ExpiresAbsolute > DateTime.Now)
                         {
-                            return true;
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
+
 
 
                 //尝试从StoreDataList 中读取缓存
-
-                data = storeDataList.Get(info.Type, info.Key);
-
-                if (data != null)
+                if (true)
                 {
-                    olddata = data;
+                    Store.StoreData data = storeDataList.Get(info.Type, info.Key);
 
-                    if (setting.Config.ReadOnly)
+                    if (data != null)
                     {
-                        if (EchoData(info.Context, data))
+                        olddata = data;
+
+                        if (setting.Config.ReadOnly)
                         {
-                            return true;
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
                         }
-                    }
 
-                    if (data.ExpiresAbsolute > DateTime.Now)
-                    {
-                        if (EchoData(info.Context, data))
+                        if (data.ExpiresAbsolute > DateTime.Now)
                         {
-                            return true;
+                            if (EchoData(info.Context, data))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
+
 
 
                 //Store
                 if (info.Store != null)
                 {
-                    data = info.Store.GetData(info.Type, info.Key);
+                    Store.StoreData data = info.Store.GetData(info.Type, info.Key);
 
                     if (data != null)
                     {
@@ -277,6 +349,18 @@ namespace PageCache
                         errorLog.Write("store is null");
                     }
                 }
+
+
+
+
+
+
+
+
+
+
+
+
             }
 
             #endregion

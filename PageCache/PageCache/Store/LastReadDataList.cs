@@ -1,11 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Web;
 
 namespace PageCache.Store
 {
     public class LastReadDataList
     {
 
-        List<StoreData> datalist = null;
+        const string CACHE_KEY = "LastReadDataList";
+
+
+
+        // List<StoreData> datalist = null;
+        public List<StoreData> DataList
+        {
+            get { return GetCacheDataList(); }
+        }
+
 
         int capacity = 10;
         public int Capacity
@@ -14,77 +25,117 @@ namespace PageCache.Store
         }
 
 
-
-        public LastReadDataList(int capacity)
+        List<StoreData> GetCacheDataList()
         {
-            this.capacity = capacity;
-            this.datalist = new List<StoreData>(capacity);
+            List<StoreData> datalist = null;
+
+            object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY);
+
+            if (cacheObject == null)
+            {
+                datalist = new List<StoreData>(this.capacity);
+
+                HttpContext.Current.Cache.Insert(CACHE_KEY, datalist);
+            }
+            else
+            {
+                datalist = (List<StoreData>)cacheObject;
+            }
+
+            return datalist;
         }
 
-        public StoreData Get(string type, string key)
+
+        StoreData Find(string type, string key)
         {
+            List<StoreData> datalist = GetCacheDataList();
+
+            return Find(datalist, type, key);
+        }
+
+        StoreData Find(List<StoreData> datalist, string type, string key)
+        {
+
+            if (datalist == null)
+            {
+                return null;
+            }
+
             for (int i = 0; i < datalist.Count; i++)
             {
                 var entity = datalist[i];
-                if (entity.Key.Equals(key) && entity.Type.Equals(type))
+                if (entity != null)
                 {
-                    return entity;
+                    if (entity.Key.Equals(key, StringComparison.OrdinalIgnoreCase) && entity.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return entity;
+                    }
                 }
+
             }
             return null;
         }
 
+
+        public LastReadDataList(int capacity)
+        {
+            this.capacity = capacity;
+            //this.datalist = new List<StoreData>(capacity);
+        }
+
+        public StoreData Get(string type, string key)
+        {
+            return Find(type, key);
+        }
+
         public void Delete(string type, string key)
         {
-            for (int i = 0; i < datalist.Count; i++)
+            var datalist = GetCacheDataList();
+
+            if (datalist != null)
             {
-                var entity = datalist[i];
-                if (entity.Key.Equals(key) && entity.Type.Equals(type))
+                var entity = Find(datalist, type, key);
+
+                if (entity != null)
                 {
-
                     datalist.Remove(entity);
-
-                    return;
                 }
             }
         }
 
+        bool isClearing = false;
+
         public void Add(StoreData data)
         {
-            var foundEntity = Get(data.Type, data.Key);
+            var datalist = GetCacheDataList();
+            if (datalist == null)
+            {
+                return;
+            }
+
+            var foundEntity = Find(datalist, data.Type, data.Key);
 
             if (foundEntity != null)
             {
-                this.datalist.Remove(foundEntity);
+                datalist.Remove(foundEntity);
             }
 
-            this.datalist.Add(data);
+            datalist.Add(data);
 
-            Clear();
-        }
-
-
-
-        bool isClearing = false;
-        /// <summary>
-        /// 清理缓存
-        /// </summary>
-        void Clear()
-        {
             if (isClearing)
             {
                 return;
             }
 
             isClearing = true;
-
-            if (this.datalist.Count >= this.capacity)
+            if (datalist.Count >= this.capacity)
             {
-                this.datalist.RemoveAt(0);
+                datalist.RemoveAt(0);
             }
-
             isClearing = false;
         }
+
+
 
 
 
