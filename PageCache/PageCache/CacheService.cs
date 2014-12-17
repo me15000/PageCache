@@ -23,6 +23,7 @@ namespace PageCache
         Common.HttpClient httpClient;
 
         Common.Log errorLog = null;
+
         public Common.Log ErrorLog
         {
             get { return errorLog; }

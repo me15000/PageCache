@@ -6,7 +6,10 @@ namespace PageCache
 {
     public class CacheModule : IHttpModule
     {
+        const string CACHE_KEY = "PAGECACHE_CacheService";
+
         CacheService service = null;
+
         public void Init(HttpApplication context)
         {
             if (InitSetting())
@@ -17,19 +20,44 @@ namespace PageCache
         //初始化设置
         public bool InitSetting()
         {
-            string configPath = AppDomain.CurrentDomain.BaseDirectory + ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
+            var cache = HttpContext.Current.Cache;
 
-            Config.Config config;
+            object cacheObject = cache.Get(CACHE_KEY);
 
-            if (Config.ConfigBuilder.TryParseConfig(configPath, out config))
+            if (cacheObject != null)
             {
-                if (!config.Enable)
-                {
-                    return false;
-                }
+                service = (CacheService)cacheObject;
+            }
+            else
+            {
+                Config.Config config = null;
 
-                Setting.Setting setting = new Setting.Setting(config);
-                this.service = new CacheService(setting, this);
+                string configPath = AppDomain.CurrentDomain.BaseDirectory + ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
+
+                if (Config.ConfigBuilder.TryParseConfig(configPath, out config))
+                {
+                    Setting.Setting setting = null;
+
+                    setting = new Setting.Setting(config);
+
+                    if (setting != null)
+                    {
+                        if (setting.Config.Enable)
+                        {
+                            service = new CacheService(setting, this);
+
+                            if (service != null)
+                            {
+                                cache.Insert(CACHE_KEY, service, new System.Web.Caching.CacheDependency(configPath));
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            if (service != null)
+            {
                 return true;
             }
 
@@ -42,6 +70,7 @@ namespace PageCache
         public void OnBeginRequest(Object source, EventArgs e)
         {
             HttpApplication application = (HttpApplication)source;
+
             HttpContext context = application.Context;
 
 

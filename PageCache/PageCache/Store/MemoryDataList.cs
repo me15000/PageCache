@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Web;
@@ -15,17 +16,34 @@ namespace PageCache.Store
 
     public class MemoryDataList
     {
-
-        const string CACHE_KEY = "MemoryDataList";
-
-
-
-        //List<MemoryDataEntity> datalist = null;
-
-
         public List<MemoryDataEntity> DataList
         {
-            get { return GetCacheDataList(); }
+            get {
+                var cacheData = GetCacheData();
+                var cacheKeyList = GetCacheKeyList();
+
+                string[] keys = cacheKeyList.ToArray();
+
+                List<MemoryDataEntity> list = new List<MemoryDataEntity>(keys.Length);
+
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    string key = keys[i];
+
+                    object cacheObject = cacheData[key];
+
+                    if (cacheObject != null)
+                    {
+                        MemoryDataEntity entity = (MemoryDataEntity)cacheObject;
+
+                        if (entity != null)
+                        {
+                            list.Add(entity);
+                        }
+                    }
+                }
+                return list;
+            }
         }
 
         int capacity = 10;
@@ -55,48 +73,78 @@ namespace PageCache.Store
         public MemoryDataList(int capacity, int clearSeconds, int removeSeconds)
         {
             this.capacity = capacity;
-            //this.datalist = new List<MemoryDataEntity>(capacity);
-
             this.clearSeconds = clearSeconds;
             this.removeSeconds = removeSeconds;
         }
 
-        List<MemoryDataEntity> GetCacheDataList()
-        {
-            List<MemoryDataEntity> datalist = null;
 
-            object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY);
+        const string CACHE_KEY_LIST_KEY = "MemoryDataList_KEY_LIST";
+        List<string> GetCacheKeyList()
+        {
+            List<string> datalist = null;
+
+
+            object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY_LIST_KEY);
 
             if (cacheObject == null)
             {
-                datalist = new List<MemoryDataEntity>(this.capacity);
+                datalist = new List<string>(this.capacity);
 
-                HttpContext.Current.Cache.Insert(CACHE_KEY, datalist);
+                HttpContext.Current.Cache.Insert(CACHE_KEY_LIST_KEY, datalist);
             }
             else
             {
-                datalist = (List<MemoryDataEntity>)cacheObject;
+                datalist = (List<string>)cacheObject;
             }
 
             return datalist;
         }
 
 
+        const string CACHE_DATA_KEY = "MemoryDataList_DATA";
+        Hashtable GetCacheData()
+        {
+            Hashtable datalist = null;
+
+            object cacheObject = HttpContext.Current.Cache.Get(CACHE_DATA_KEY);
+
+            if (cacheObject == null)
+            {
+                datalist = new Hashtable(this.capacity);
+
+                HttpContext.Current.Cache.Insert(CACHE_DATA_KEY, datalist);
+            }
+            else
+            {
+                datalist = (Hashtable)cacheObject;
+            }
+
+            return datalist;
+        }
+
+
+        string GetDataKey(string type, string key)
+        {
+            return type + "_" + key;
+        }
 
         public void Delete(string type, string key)
         {
-            List<MemoryDataEntity> datalist = GetCacheDataList();
-            if (datalist != null)
-            {
-                var entity = Find(datalist, type, key);
+            var cacheData = GetCacheData();
+            var cacheKeyList = GetCacheKeyList();
 
-                if (entity != null)
-                {
-                    datalist.Remove(entity);
-                }
+            if (cacheData == null || cacheKeyList == null)
+            {
+                return;
             }
 
+            string dk = GetDataKey(type, key);
+
+            cacheKeyList.Remove(dk);
+
+            cacheData.Remove(dk);
         }
+
 
         public StoreData Get(string type, string key)
         {
@@ -107,36 +155,22 @@ namespace PageCache.Store
                 entity.LastReadDate = DateTime.Now;
             }
 
-
             return entity;
         }
 
         MemoryDataEntity Find(string type, string key)
         {
-            List<MemoryDataEntity> datalist = GetCacheDataList();
+            string dk = GetDataKey(type, key);
 
-            return Find(datalist, type, key);
-        }
+            var hashdata = GetCacheData();
 
-        MemoryDataEntity Find(List<MemoryDataEntity> datalist, string type, string key)
-        {
-            if (datalist == null)
+            object cacheObject = hashdata[dk];
+
+            if (cacheObject != null)
             {
-                return null;
+                return (MemoryDataEntity)cacheObject;
             }
 
-            for (int i = 0; i < datalist.Count; i++)
-            {
-                var entity = datalist[i];
-                if (entity != null)
-                {
-                    if (entity.Key.Equals(key) && entity.Type.Equals(type))
-                    {
-                        return entity;
-                    }
-                }
-
-            }
             return null;
         }
 
@@ -145,21 +179,15 @@ namespace PageCache.Store
         DateTime prevClearTime = DateTime.Now;
         public void Add(StoreData data)
         {
-            var datalist = GetCacheDataList();
+            var cacheData = GetCacheData();
+            var cacheKeyList = GetCacheKeyList();
 
-            if (datalist == null)
+            if (cacheData == null || cacheKeyList == null)
             {
                 return;
             }
 
-            var foundEntity = Find(datalist, data.Type, data.Key);
 
-            if (foundEntity != null)
-            {
-                datalist.Remove(foundEntity);
-            }
-
-            //MemoryDataEntity entity = (MemoryDataEntity)data;
 
             MemoryDataEntity entity = new MemoryDataEntity
             {
@@ -183,7 +211,14 @@ namespace PageCache.Store
             };
 
 
-            datalist.Add(entity);
+            string dk = GetDataKey(data.Type, data.Key);
+
+            cacheKeyList.Remove(dk);
+
+            cacheData[dk] = entity;
+
+            cacheKeyList.Add(dk);
+
 
             if (isClearing)
             {
@@ -194,10 +229,11 @@ namespace PageCache.Store
 
             double ts = (now - prevClearTime).TotalSeconds;
 
-            if (ts > clearSeconds || datalist.Count >= this.capacity)
+            if (ts > clearSeconds || cacheKeyList.Count >= this.capacity)
             {
-                ThreadPool.QueueUserWorkItem(ClearAsync, datalist);
-                // ClearAsync(null);
+                //ThreadPool.QueueUserWorkItem(ClearAsync, null);
+
+                ClearAsync(null);
             }
         }
 
@@ -215,22 +251,40 @@ namespace PageCache.Store
 
             prevClearTime = now;
 
-            var datalist = (List<MemoryDataEntity>)o;
+            var cacheData = GetCacheData();
+            var cacheKeyList = GetCacheKeyList();
 
-            if (datalist != null)
+            if (cacheData != null && cacheKeyList != null)
             {
-                for (int i = 0; i < datalist.Count; i++)
+                string[] keys = cacheKeyList.ToArray();
+
+                for (int i = 0; i < keys.Length; i++)
                 {
-                    var entity = datalist[i];
+                    string key = keys[i];
 
-                    double its = (now - entity.LastReadDate).TotalSeconds;
-
-                    if (its > removeSeconds || entity.ExpiresAbsolute < now)
+                    object cacheObject = cacheData[key];
+                    if (cacheObject != null)
                     {
-                        datalist.Remove(entity);
+                        MemoryDataEntity entity = (MemoryDataEntity)cacheObject;
+
+                        if (entity != null)
+                        {
+                            double its = (now - entity.LastReadDate).TotalSeconds;
+
+                            if (its > removeSeconds || entity.ExpiresAbsolute < now)
+                            {
+                                cacheData.Remove(key);
+                                cacheKeyList.Remove(key);
+                            }
+                        }
+
                     }
+
                 }
             }
+
+
+
 
 
             isClearing = false;
