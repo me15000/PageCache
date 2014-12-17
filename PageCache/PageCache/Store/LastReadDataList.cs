@@ -31,7 +31,7 @@ namespace PageCache.Store
 
                     if (cacheObject != null)
                     {
-                        StoreData entity = (StoreData)cacheObject;
+                        StoreData entity = cacheObject as StoreData;
 
                         if (entity != null)
                         {
@@ -69,7 +69,7 @@ namespace PageCache.Store
             }
             else
             {
-                datalist = (List<string>)cacheObject;
+                datalist = cacheObject as List<string>;
             }
 
             return datalist;
@@ -91,7 +91,7 @@ namespace PageCache.Store
             }
             else
             {
-                datalist = (Hashtable)cacheObject;
+                datalist = cacheObject as Hashtable;
             }
 
             return datalist;
@@ -116,7 +116,7 @@ namespace PageCache.Store
 
             if (cacheObject != null)
             {
-                return (StoreData)cacheObject;
+                return cacheObject as StoreData;
             }
 
             return null;

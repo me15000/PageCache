@@ -26,7 +26,7 @@ namespace PageCache
 
             if (cacheObject != null)
             {
-                service = (CacheService)cacheObject;
+                service = cacheObject as CacheService;
             }
             else
             {
@@ -69,7 +69,7 @@ namespace PageCache
         //当用户请求时触发
         public void OnBeginRequest(Object source, EventArgs e)
         {
-            HttpApplication application = (HttpApplication)source;
+            HttpApplication application = source as HttpApplication;
 
             HttpContext context = application.Context;
 

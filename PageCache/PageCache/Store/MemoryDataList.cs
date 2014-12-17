@@ -34,7 +34,7 @@ namespace PageCache.Store
 
                     if (cacheObject != null)
                     {
-                        MemoryDataEntity entity = (MemoryDataEntity)cacheObject;
+                        MemoryDataEntity entity = cacheObject as MemoryDataEntity;
 
                         if (entity != null)
                         {
@@ -94,7 +94,7 @@ namespace PageCache.Store
             }
             else
             {
-                datalist = (List<string>)cacheObject;
+                datalist = cacheObject as List<string>;
             }
 
             return datalist;
@@ -116,7 +116,7 @@ namespace PageCache.Store
             }
             else
             {
-                datalist = (Hashtable)cacheObject;
+                datalist = cacheObject as Hashtable;
             }
 
             return datalist;
@@ -168,7 +168,7 @@ namespace PageCache.Store
 
             if (cacheObject != null)
             {
-                return (MemoryDataEntity)cacheObject;
+                return cacheObject as MemoryDataEntity;
             }
 
             return null;
@@ -265,7 +265,7 @@ namespace PageCache.Store
                     object cacheObject = cacheData[key];
                     if (cacheObject != null)
                     {
-                        MemoryDataEntity entity = (MemoryDataEntity)cacheObject;
+                        MemoryDataEntity entity = cacheObject as MemoryDataEntity;
 
                         if (entity != null)
                         {
