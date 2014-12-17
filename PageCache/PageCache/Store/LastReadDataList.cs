@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+
 using System.Web;
 
 namespace PageCache.Store
@@ -10,11 +12,12 @@ namespace PageCache.Store
 
 
 
-     
+
 
         public List<StoreData> DataList
         {
-            get {
+            get
+            {
 
                 var cacheData = GetCacheData();
                 var cacheKeyList = GetCacheKeyList();
@@ -56,8 +59,8 @@ namespace PageCache.Store
         const string CACHE_KEY_LIST_KEY = "LastReadDataList_KEY_LIST";
         List<string> GetCacheKeyList()
         {
-            List<string> datalist = null;
 
+            List<string> datalist = null;
 
             object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY_LIST_KEY);
 
@@ -146,9 +149,11 @@ namespace PageCache.Store
 
             string dk = GetDataKey(type, key);
 
-            cacheKeyList.Remove(dk);
-
-            cacheData.Remove(dk);
+            lock (this)
+            {
+                cacheKeyList.Remove(dk);
+                cacheData.Remove(dk);
+            }
         }
 
         bool isClearing = false;
@@ -165,11 +170,14 @@ namespace PageCache.Store
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            cacheKeyList.Remove(dk);
-
+            lock (this)
+            {
+                cacheKeyList.Remove(dk);
+            }
             cacheData[dk] = data;
 
             cacheKeyList.Add(dk);
+
 
             if (isClearing)
             {
@@ -178,11 +186,17 @@ namespace PageCache.Store
 
             isClearing = true;
 
+
+
             if (cacheKeyList.Count >= this.capacity && cacheKeyList.Count > 0)
             {
                 string key = cacheKeyList[0];
-                cacheData.Remove(key);
-                cacheKeyList.Remove(key);
+
+                lock (this)
+                {
+                    cacheData.Remove(key);
+                    cacheKeyList.Remove(key);
+                }
             }
 
             isClearing = false;

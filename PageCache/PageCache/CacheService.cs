@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Web;
 
 namespace PageCache
@@ -195,9 +195,6 @@ namespace PageCache
         {
 
 
-
-
-
             Store.StoreData olddata = null;
 
             //强制刷新缓存
@@ -335,13 +332,8 @@ namespace PageCache
                             {
                                 return true;
                             }
-                        }
-                        else
-                        {
-                            //info.Store.Delete(info.Type, info.Key);
-                        }
+                        }                        
                     }
-
                 }
                 else
                 {
@@ -350,50 +342,91 @@ namespace PageCache
                         errorLog.Write("store is null");
                     }
                 }
-
-
-
-
-
-
-
-
-
-
-
-
             }
 
             #endregion
 
-            Store.StoreData outdata = null;
 
-            if (TryCreateData(info, olddata, out outdata))
+            return TryCreateDataAsync(info, olddata);
+        }
+
+
+        List<string> creatingKeyList = new List<string>(100);
+
+        string GetCreatingKey(RequestInfo info)
+        {
+            return info.Key + ":" + info.Type;
+        }
+
+        bool TryCreateDataAsync(RequestInfo info, Store.StoreData olddata)
+        {
+            string creatingKey = GetCreatingKey(info);
+
+            //优先输出老缓存，再创建保存缓存
+            if (olddata != null)
             {
-
-                if (info.Store != null)
+                
+                if (EchoData(info.Context, olddata))
                 {
-                    info.Store.Delete(info.Type, info.Key);
-                }
+
+                    if (!creatingKeyList.Contains(creatingKey))
+                    {
+                        //ThreadPool.QueueUserWorkItem(TryCreateDataAsync, info);
+
+                        TryCreateDataAsync(info);
+                    }
 
 
-                this.lastReadDataList.Delete(info.Type, info.Key);
-
-                this.memoryDataList.Delete(info.Type, info.Key);
-
-
-                if (accessLog != null)
-                {
-                    accessLog.Write("TryCreateData success");
+                    return true;
                 }
             }
-
-
-            if (outdata != null)
+            else
             {
-                if (EchoData(info.Context, outdata))
+                //创建并输出缓存
+
+                //保证只有一个创建进程,等待这个进程完成
+
+                if (!creatingKeyList.Contains(creatingKey))
                 {
-                    return true;
+                    int maxLoopTimes = 5;
+                    int loopTimes = 0;
+
+                loop:
+
+                    loopTimes++;
+
+                    Thread.Sleep(200);
+
+                    Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
+
+                    if (data != null)
+                    {
+                        if (EchoData(info.Context, data))
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (loopTimes <= maxLoopTimes)
+                        {
+                            goto loop;
+                        }
+                    }
+
+
+                }
+                else
+                {
+                    Store.StoreData outdata = null;
+
+                    if (TryCreateAndSaveData(info, out outdata))
+                    {
+                        if (EchoData(info.Context, outdata))
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
 
@@ -401,83 +434,60 @@ namespace PageCache
         }
 
 
-        Hashtable creatingDataList = new Hashtable(100);
-
-        //Dictionary<string, Store.StoreData> creatingDataList = new Dictionary<string, Store.StoreData>(100);
-
-        bool TryCreateData(RequestInfo info, Store.StoreData olddata, out Store.StoreData outdata)
+        void TryCreateDataAsync(object o)
         {
-            outdata = null;
+            RequestInfo info = o as RequestInfo;
 
-            bool createResult = false;
+            //创建并存储缓存
+            Store.StoreData outdata = null;
 
-            string creatingKey = info.Key + ":" + info.Type;
+            TryCreateAndSaveData(info, out outdata);
+        }
 
-            if (creatingDataList.ContainsKey(creatingKey))
+        bool TryCreateAndSaveData(RequestInfo info, out Store.StoreData outdata)
+        {
+            outdata = CreateData(info);
+
+            if (outdata != null)
             {
-                object data = creatingDataList[creatingKey];
 
-                if (data != null)
+                //存入store
+                if (outdata.Seconds > 0 && outdata.BodyData.Length >= 0)
                 {
-                    outdata = (Store.StoreData)data;
-                }
-                else
-                {
-                    outdata = olddata;
+                    this.storeDataList.Add(info.Store, outdata);
                 }
 
-                return false;
-            }
+                //存入 lastRead
+                lastReadDataList.Add(outdata);
 
-            creatingDataList[creatingKey] = olddata;
-
-
-            Store.StoreData newdata = CreateData(info);
-
-            if (newdata != null)
-            {
-                outdata = newdata;
-
-                lastReadDataList.Add(newdata);
-
+                //存入 memory
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     if (memoryDataList.Get(info.Type, info.Key) != null)
                     {
-                        memoryDataList.Add(newdata);
+                        memoryDataList.Add(outdata);
                     }
                 }
 
-                createResult = true;
-            }
-            else
-            {
-                outdata = olddata;
+                return true;
             }
 
-            if (creatingDataList.ContainsKey(creatingKey))
-            {
-                creatingDataList.Remove(creatingKey);
-            }
-
-            return createResult;
+            return false;
         }
+
 
         Store.StoreData CreateData(RequestInfo info)
         {
+            string creatingKey = GetCreatingKey(info);
+         
+                creatingKeyList.Add(creatingKey);
+        
+
+
             byte[] rheadersData = GetRequestHeadersData(info);
 
             try
             {
-
-                //Common.HttpClient httpClient = new Common.HttpClient();
-
-                //httpClient.ReceiveTimeout = this.setting.Config.NetReceiveTimeout;
-
-                //httpClient.SendTimeout = this.setting.Config.NetSendTimeout;                
-
-                //httpClient.ErrorLog = this.errorLog;
-
 
                 Common.HttpData httpdata = httpClient.GetData(info.HostAddress, rheadersData);
 
@@ -493,11 +503,6 @@ namespace PageCache
                             {
                                 if (data.HeadersData.Length > 0)
                                 {
-                                    if (data.Seconds > 0 && data.BodyData.Length >= 0)
-                                    {
-                                        this.storeDataList.Add(info.Store, data);
-                                    }
-
                                     return data;
                                 }
                             }
@@ -520,6 +525,11 @@ namespace PageCache
                     errorLog.Write(exBuilder.ToString());
 
                 }
+            }
+
+            lock (this)
+            {
+                creatingKeyList.Remove(creatingKey);
             }
 
             return null;

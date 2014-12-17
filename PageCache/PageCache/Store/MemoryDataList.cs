@@ -18,7 +18,8 @@ namespace PageCache.Store
     {
         public List<MemoryDataEntity> DataList
         {
-            get {
+            get
+            {
                 var cacheData = GetCacheData();
                 var cacheKeyList = GetCacheKeyList();
 
@@ -140,9 +141,13 @@ namespace PageCache.Store
 
             string dk = GetDataKey(type, key);
 
-            cacheKeyList.Remove(dk);
 
-            cacheData.Remove(dk);
+            lock (this)
+            {
+                cacheKeyList.Remove(dk);
+
+                cacheData.Remove(dk);
+            }
         }
 
 
@@ -213,12 +218,14 @@ namespace PageCache.Store
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            cacheKeyList.Remove(dk);
+            lock (this)
+            {
+                cacheKeyList.Remove(dk);
+            }
 
             cacheData[dk] = entity;
 
             cacheKeyList.Add(dk);
-
 
             if (isClearing)
             {
@@ -254,35 +261,41 @@ namespace PageCache.Store
             var cacheData = GetCacheData();
             var cacheKeyList = GetCacheKeyList();
 
+
+
             if (cacheData != null && cacheKeyList != null)
             {
                 string[] keys = cacheKeyList.ToArray();
 
-                for (int i = 0; i < keys.Length; i++)
+                lock (this)
                 {
-                    string key = keys[i];
-
-                    object cacheObject = cacheData[key];
-                    if (cacheObject != null)
+                    for (int i = 0; i < keys.Length; i++)
                     {
-                        MemoryDataEntity entity = cacheObject as MemoryDataEntity;
+                        string key = keys[i];
 
-                        if (entity != null)
+                        object cacheObject = cacheData[key];
+                        if (cacheObject != null)
                         {
-                            double its = (now - entity.LastReadDate).TotalSeconds;
+                            MemoryDataEntity entity = cacheObject as MemoryDataEntity;
 
-                            if (its > removeSeconds || entity.ExpiresAbsolute < now)
+                            if (entity != null)
                             {
-                                cacheData.Remove(key);
-                                cacheKeyList.Remove(key);
+                                double its = (now - entity.LastReadDate).TotalSeconds;
+
+                                if (its > removeSeconds || entity.ExpiresAbsolute < now)
+                                {
+
+                                    cacheData.Remove(key);
+                                    cacheKeyList.Remove(key);
+                                }
                             }
+
                         }
 
                     }
-
                 }
-            }
 
+            }
 
 
 

@@ -86,7 +86,6 @@ namespace PageCache.Store
         {
             List<string> datalist = null;
 
-
             object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY_LIST_KEY);
 
             if (cacheObject == null)
@@ -171,11 +170,15 @@ namespace PageCache.Store
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            cacheKeyList.Remove(dk);
+            lock (this)
+            {
+                cacheKeyList.Remove(dk);
+            }
 
             cacheData[dk] = entity;
 
             cacheKeyList.Add(dk);
+
 
 
             if (cacheData.Count >= capacity)
@@ -202,6 +205,7 @@ namespace PageCache.Store
 
             var cacheData = GetCacheData();
             var cacheKeyList = GetCacheKeyList();
+
 
             if (cacheData != null && cacheKeyList != null)
             {
@@ -241,6 +245,7 @@ namespace PageCache.Store
 
                 }
             }
+
 
 
             isSaving = false;
