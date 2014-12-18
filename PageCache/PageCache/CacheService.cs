@@ -97,6 +97,22 @@ namespace PageCache
 
             string type = context.Request.QueryString["type"] ?? "all";
 
+            if (true)
+            {
+
+                string[] array = creatingKeyList.ToArray();
+
+                context.Response.Write("[creatingKeyList,Count:" + array.Length + "]:\r\n");
+
+
+                for (int i = 0; i < array.Length; i++)
+                {
+                    context.Response.Write(array[i] + "\r\n");
+
+                }
+            }
+
+
             if (type.IndexOf("all") >= 0 || type.IndexOf("mem") >= 0)
             {
 
@@ -332,7 +348,7 @@ namespace PageCache
                             {
                                 return true;
                             }
-                        }                        
+                        }
                     }
                 }
                 else
@@ -365,7 +381,7 @@ namespace PageCache
             //优先输出老缓存，再创建保存缓存
             if (olddata != null)
             {
-                
+
                 if (EchoData(info.Context, olddata))
                 {
 
@@ -386,7 +402,7 @@ namespace PageCache
 
                 //保证只有一个创建进程,等待这个进程完成
 
-                if (!creatingKeyList.Contains(creatingKey))
+                if (creatingKeyList.Contains(creatingKey))
                 {
                     int maxLoopTimes = 5;
                     int loopTimes = 0;
@@ -478,10 +494,16 @@ namespace PageCache
 
         Store.StoreData CreateData(RequestInfo info)
         {
+            Store.StoreData storeData = null;
             string creatingKey = GetCreatingKey(info);
-         
-                creatingKeyList.Add(creatingKey);
-        
+
+            lock (this)
+            {
+                creatingKeyList.Remove(creatingKey);
+            }
+
+            creatingKeyList.Add(creatingKey);
+
 
 
             byte[] rheadersData = GetRequestHeadersData(info);
@@ -503,7 +525,7 @@ namespace PageCache
                             {
                                 if (data.HeadersData.Length > 0)
                                 {
-                                    return data;
+                                    storeData = data;
                                 }
                             }
                         }
@@ -532,7 +554,7 @@ namespace PageCache
                 creatingKeyList.Remove(creatingKey);
             }
 
-            return null;
+            return storeData;
         }
 
 
