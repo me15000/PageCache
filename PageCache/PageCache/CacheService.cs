@@ -404,6 +404,9 @@ namespace PageCache
 
                 if (creatingKeyList.Contains(creatingKey))
                 {
+
+                    //return false;
+                    
                     int maxLoopTimes = 5;
                     int loopTimes = 0;
 
@@ -411,7 +414,7 @@ namespace PageCache
 
                     loopTimes++;
 
-                    Thread.Sleep(200);
+                    System.Threading.Thread.CurrentThread.Join(200);
 
                     Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
 
@@ -429,7 +432,7 @@ namespace PageCache
                             goto loop;
                         }
                     }
-
+                   
 
                 }
                 else
