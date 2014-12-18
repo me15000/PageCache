@@ -16,6 +16,10 @@ namespace PageCache.Store
 
     public class MemoryDataList
     {
+
+ 
+
+
         public List<MemoryDataEntity> DataList
         {
             get
@@ -85,13 +89,13 @@ namespace PageCache.Store
             List<string> datalist = null;
 
 
-            object cacheObject = HttpContext.Current.Cache.Get(CACHE_KEY_LIST_KEY);
+            object cacheObject = HttpRuntime.Cache.Get(CACHE_KEY_LIST_KEY);
 
             if (cacheObject == null)
             {
                 datalist = new List<string>(this.capacity);
 
-                HttpContext.Current.Cache.Insert(CACHE_KEY_LIST_KEY, datalist);
+                HttpRuntime.Cache.Insert(CACHE_KEY_LIST_KEY, datalist);
             }
             else
             {
@@ -107,13 +111,13 @@ namespace PageCache.Store
         {
             Hashtable datalist = null;
 
-            object cacheObject = HttpContext.Current.Cache.Get(CACHE_DATA_KEY);
+            object cacheObject = HttpRuntime.Cache.Get(CACHE_DATA_KEY);
 
             if (cacheObject == null)
             {
                 datalist = new Hashtable(this.capacity);
 
-                HttpContext.Current.Cache.Insert(CACHE_DATA_KEY, datalist);
+                HttpRuntime.Cache.Insert(CACHE_DATA_KEY, datalist);
             }
             else
             {
@@ -238,9 +242,9 @@ namespace PageCache.Store
 
             if (ts > clearSeconds || cacheKeyList.Count >= this.capacity)
             {
-                //ThreadPool.QueueUserWorkItem(ClearAsync, null);
+                ThreadPool.QueueUserWorkItem(ClearAsync, null);
 
-                ClearAsync(null);
+                //ClearAsync(null);
             }
         }
 

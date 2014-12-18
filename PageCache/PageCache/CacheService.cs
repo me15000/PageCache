@@ -48,6 +48,7 @@ namespace PageCache
             this.setting = setting;
 
             this.module = module;
+            
 
             var config = setting.Config;
 
@@ -159,6 +160,7 @@ namespace PageCache
 
         public void Process(HttpContext context)
         {
+            
 
             if (context.Request.RawUrl.IndexOf(STATUS_KEY) >= 0)
             {
@@ -382,17 +384,16 @@ namespace PageCache
             if (olddata != null)
             {
 
+
+                if (!creatingKeyList.Contains(creatingKey))
+                {
+                    ThreadPool.QueueUserWorkItem(TryCreateDataAsync, info);
+                    //TryCreateDataAsync(info);
+                }
+
+
                 if (EchoData(info.Context, olddata))
                 {
-
-                    if (!creatingKeyList.Contains(creatingKey))
-                    {
-                        //ThreadPool.QueueUserWorkItem(TryCreateDataAsync, info);
-
-                        TryCreateDataAsync(info);
-                    }
-
-
                     return true;
                 }
             }
@@ -432,7 +433,7 @@ namespace PageCache
                             goto loop;
                         }
                     }
-                   
+                    /**/
 
                 }
                 else
@@ -473,7 +474,7 @@ namespace PageCache
                 //存入store
                 if (outdata.Seconds > 0 && outdata.BodyData.Length >= 0)
                 {
-                    this.storeDataList.Add(info.Store, outdata);
+                    storeDataList.Add(info.Store, outdata);
                 }
 
                 //存入 lastRead
