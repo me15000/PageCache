@@ -220,21 +220,10 @@ namespace PageCache.Store
             {
 
                 //清理掉不匹配的
-                if (cacheData.Count > cacheKeyList.Count)
-                {
-                    var keys = cacheData.Keys;
 
-                    foreach (string k in keys)
-                    {
-                        if (!cacheKeyList.Contains(k))
-                        {
-                            cacheData.Remove(k);
-                        }
-                    }
-                }
-                else if (cacheData.Count < cacheKeyList.Count)
-                {
 
+                if (true)
+                {
                     var keys = cacheKeyList.ToArray();
 
                     lock (this)
@@ -251,6 +240,19 @@ namespace PageCache.Store
                     }
                 }
 
+
+                if (true)
+                {
+                    var keys = cacheData.Keys;
+
+                    foreach (string k in keys)
+                    {
+                        if (!cacheKeyList.Contains(k))
+                        {
+                            cacheData.Remove(k);
+                        }
+                    }
+                }
 
 
                 //存储

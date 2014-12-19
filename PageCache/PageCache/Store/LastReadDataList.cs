@@ -175,6 +175,7 @@ namespace PageCache.Store
             {
                 cacheKeyList.Remove(dk);
             }
+
             cacheData[dk] = data;
 
             cacheKeyList.Add(dk);
@@ -214,7 +215,6 @@ namespace PageCache.Store
 
             int removeCount = cacheData.Count - this.capacity;
 
-            int nowCount = 0;
 
             try
             {
@@ -223,34 +223,26 @@ namespace PageCache.Store
                 {
                     lock (this)
                     {
-                        while (nowCount < removeCount && cacheKeyList.Count > 0)
+                        int nowCount = 0;
+
+                        while (nowCount < removeCount)
                         {
-                            nowCount++;
+                            if (cacheKeyList.Count > 0)
+                            {
+                                string key = cacheKeyList[0];
 
-                            string key = cacheKeyList[0];
+                                cacheData.Remove(key);
+                                cacheKeyList.Remove(key);
 
-                            cacheData.Remove(key);
-                            cacheKeyList.Remove(key);
+                                nowCount++;
+                            }
                         }
                     }
                 }
 
                 //清理掉不匹配的
-                if (cacheData.Count > cacheKeyList.Count)
+                if (true)
                 {
-                    var keys = cacheData.Keys;
-
-                    foreach (string k in keys)
-                    {
-                        if (!cacheKeyList.Contains(k))
-                        {
-                            cacheData.Remove(k);
-                        }
-                    }
-                }
-                else if (cacheData.Count < cacheKeyList.Count)
-                {
-
                     var keys = cacheKeyList.ToArray();
 
                     lock (this)
@@ -266,6 +258,22 @@ namespace PageCache.Store
                         }
                     }
                 }
+
+
+                if (true)
+                {
+                    var keys = cacheData.Keys;
+
+                    foreach (string k in keys)
+                    {
+                        if (!cacheKeyList.Contains(k))
+                        {
+                            cacheData.Remove(k);
+                        }
+                    }
+                }
+
+
             }
             catch (Exception ex)
             {

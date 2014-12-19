@@ -158,6 +158,9 @@ namespace PageCache
             context.ApplicationInstance.CompleteRequest();
         }
 
+
+        const string SYSTEM_ERROR_MESSAGE = "The system is busy now. Please try later.";
+
         public void Process(HttpContext context)
         {
 
@@ -195,12 +198,16 @@ namespace PageCache
 
                     if (!EchoData(info))
                     {
-                        context.Response.Write("The system is busy now. Please try later.");
+                        context.Response.StatusCode = 503;
+
+
+                        context.Response.Write(SYSTEM_ERROR_MESSAGE);
 
                         if (errorLog != null)
                         {
-                            errorLog.Write("The system is busy now. Please try later.\r\n" + info.ToString());
+                            errorLog.Write(SYSTEM_ERROR_MESSAGE + info.ToString());
                         }
+
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -650,7 +657,7 @@ namespace PageCache
 
             if (hhs != null)
             {
-                context.Response.StatusCode = hhs.StatusCode;
+                //context.Response.StatusCode = hhs.StatusCode;
                 context.Response.StatusDescription = hhs.StatusDescription;
 
                 foreach (string k in hhs.Headers.Keys)
@@ -668,7 +675,11 @@ namespace PageCache
                 }
             }
 
-            EchoBrowserCache(context, data);
+            if (context.Response.StatusCode == 200)
+            {
+                EchoBrowserCache(context, data);
+            }
+
 
             var response = context.Response;
             response.BufferOutput = false;
