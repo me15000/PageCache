@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using System.Web;
+using System.Threading;
 
 namespace PageCache.Store
 {
     public class LastReadDataList
     {
 
-        
-      
+
+
 
 
         public List<StoreData> DataList
@@ -157,7 +158,6 @@ namespace PageCache.Store
             }
         }
 
-        bool isClearing = false;
 
         public void Add(StoreData data)
         {
@@ -185,26 +185,95 @@ namespace PageCache.Store
                 return;
             }
 
+
+            if (cacheData.Count >= this.capacity || cacheData.Count != cacheKeyList.Count)
+            {
+                ThreadPool.QueueUserWorkItem(ClearAsync, null);
+            }
+        }
+
+
+        bool isClearing = false;
+        void ClearAsync(object o)
+        {
+            if (isClearing)
+            {
+                return;
+            }
+
+            var cacheData = GetCacheData();
+
+            var cacheKeyList = GetCacheKeyList();
+
+            if (cacheData == null || cacheKeyList == null)
+            {
+                return;
+            }
+
             isClearing = true;
 
+            int removeCount = cacheData.Count - this.capacity;
 
+            int nowCount = 0;
 
-            if (cacheKeyList.Count >= this.capacity && cacheKeyList.Count > 0)
+            try
             {
-                string key = cacheKeyList[0];
-
-                lock (this)
+                //清理掉多余的
+                if (removeCount > 0)
                 {
-                    cacheData.Remove(key);
-                    cacheKeyList.Remove(key);
+                    lock (this)
+                    {
+                        while (nowCount < removeCount && cacheKeyList.Count > 0)
+                        {
+                            nowCount++;
+
+                            string key = cacheKeyList[0];
+
+                            cacheData.Remove(key);
+                            cacheKeyList.Remove(key);
+                        }
+                    }
                 }
+
+                //清理掉不匹配的
+                if (cacheData.Count > cacheKeyList.Count)
+                {
+                    var keys = cacheData.Keys;
+
+                    foreach (string k in keys)
+                    {
+                        if (!cacheKeyList.Contains(k))
+                        {
+                            cacheData.Remove(k);
+                        }
+                    }
+                }
+                else if (cacheData.Count < cacheKeyList.Count)
+                {
+
+                    var keys = cacheKeyList.ToArray();
+
+                    lock (this)
+                    {
+                        for (int i = 0; i < keys.Length; i++)
+                        {
+                            string k = keys[i];
+
+                            if (!cacheData.ContainsKey(k))
+                            {
+                                cacheKeyList.Remove(k);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
 
             isClearing = false;
         }
-
-
-
 
 
 

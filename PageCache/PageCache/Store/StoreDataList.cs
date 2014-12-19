@@ -200,18 +200,61 @@ namespace PageCache.Store
                 return;
             }
 
+            var cacheData = GetCacheData();
+            var cacheKeyList = GetCacheKeyList();
+
+
+            if (cacheData == null || cacheKeyList == null)
+            {
+                return;
+            }
+
+
             isSaving = true;
 
 
             DateTime date = DateTime.Now;
 
-            var cacheData = GetCacheData();
-            var cacheKeyList = GetCacheKeyList();
 
-
-            if (cacheData != null && cacheKeyList != null)
+            try
             {
-                try
+
+                //清理掉不匹配的
+                if (cacheData.Count > cacheKeyList.Count)
+                {
+                    var keys = cacheData.Keys;
+
+                    foreach (string k in keys)
+                    {
+                        if (!cacheKeyList.Contains(k))
+                        {
+                            cacheData.Remove(k);
+                        }
+                    }
+                }
+                else if (cacheData.Count < cacheKeyList.Count)
+                {
+
+                    var keys = cacheKeyList.ToArray();
+
+                    lock (this)
+                    {
+                        for (int i = 0; i < keys.Length; i++)
+                        {
+                            string k = keys[i];
+
+                            if (!cacheData.ContainsKey(k))
+                            {
+                                cacheKeyList.Remove(k);
+                            }
+                        }
+                    }
+                }
+
+
+
+                //存储
+                if (true)
                 {
                     string[] keys = cacheKeyList.ToArray();
 
@@ -241,16 +284,17 @@ namespace PageCache.Store
                             }
                         }
 
-                       
+
                         cacheData.Remove(key);
                     }
-
-
                 }
-                catch (Exception ex)
-                {
+            
 
-                }
+
+            }
+            catch (Exception ex)
+            {
+
             }
 
 

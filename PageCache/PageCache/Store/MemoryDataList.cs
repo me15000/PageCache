@@ -256,23 +256,31 @@ namespace PageCache.Store
                 return;
             }
 
+
+            var cacheData = GetCacheData();
+            var cacheKeyList = GetCacheKeyList();
+
+
+            if (cacheData == null || cacheKeyList == null)
+            {
+                return;
+            }
+
             isClearing = true;
 
             DateTime now = DateTime.Now;
 
             prevClearTime = now;
 
-            var cacheData = GetCacheData();
-            var cacheKeyList = GetCacheKeyList();
 
 
 
-            if (cacheData != null && cacheKeyList != null)
+            try
             {
-                string[] keys = cacheKeyList.ToArray();
-
                 lock (this)
                 {
+                    string[] keys = cacheKeyList.ToArray();
+
                     for (int i = 0; i < keys.Length; i++)
                     {
                         string key = keys[i];
@@ -299,9 +307,45 @@ namespace PageCache.Store
                     }
                 }
 
+                //清理掉不匹配的
+                if (cacheData.Count > cacheKeyList.Count)
+                {
+                    var keys = cacheData.Keys;
+
+                    foreach (string k in keys)
+                    {
+                        if (!cacheKeyList.Contains(k))
+                        {
+                            cacheData.Remove(k);
+                        }
+                    }
+                }
+                else if (cacheData.Count < cacheKeyList.Count)
+                {
+
+                    var keys = cacheKeyList.ToArray();
+
+                    lock (this)
+                    {
+                        for (int i = 0; i < keys.Length; i++)
+                        {
+                            string k = keys[i];
+
+                            if (!cacheData.ContainsKey(k))
+                            {
+                                cacheKeyList.Remove(k);
+                            }
+                        }
+                    }
+                }
+
+
             }
-
-
+            catch (Exception ex)
+            {
+                
+            }
+           
 
 
             isClearing = false;

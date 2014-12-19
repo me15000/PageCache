@@ -90,14 +90,22 @@ namespace PageCache.Setting
             get { return setting; }
         }
 
+        bool createFirst = true;
+        public bool CreateFirst
+        {
+            get { return createFirst; }
+        }
+
 
         public Rule(Rules rules, Config.Rule configRule)
         {
             this.rules = rules;
 
-            setting = rules.Setting;
+            this.setting = rules.Setting;
 
             this.configRule = configRule;
+
+            this.createFirst = configRule.CreateFirst;
 
             matchRegex = new Regex(configRule.Match, configRule.IgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
 

@@ -48,7 +48,7 @@ namespace PageCache
             this.setting = setting;
 
             this.module = module;
-            
+
 
             var config = setting.Config;
 
@@ -160,7 +160,7 @@ namespace PageCache
 
         public void Process(HttpContext context)
         {
-            
+
 
             if (context.Request.RawUrl.IndexOf(STATUS_KEY) >= 0)
             {
@@ -365,7 +365,15 @@ namespace PageCache
             #endregion
 
 
-            return TryCreateDataAsync(info, olddata);
+            //创建优先
+            if (info.Rule.CreateFirst)
+            {
+                return TryCreateAndEchoData(info, olddata);
+            }
+            else
+            {
+                return TryEchoAndCreateData(info, olddata);
+            }
         }
 
 
@@ -376,7 +384,76 @@ namespace PageCache
             return info.Key + ":" + info.Type;
         }
 
-        bool TryCreateDataAsync(RequestInfo info, Store.StoreData olddata)
+
+        bool TryCreateAndEchoData(RequestInfo info, Store.StoreData olddata)
+        {
+
+
+            string creatingKey = GetCreatingKey(info);
+
+            //优先创建缓存，如果失败输出老缓存
+
+
+            //创建并输出缓存
+
+            //保证只有一个创建进程,等待这个进程完成
+
+            if (creatingKeyList.Contains(creatingKey))
+            {
+                int maxLoopTimes = 5;
+                int loopTimes = 0;
+
+            loop:
+
+                loopTimes++;
+
+                System.Threading.Thread.CurrentThread.Join(200);
+
+                Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
+
+                if (data != null)
+                {
+                    if (EchoData(info.Context, data))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (loopTimes <= maxLoopTimes)
+                    {
+                        goto loop;
+                    }
+                }
+            }
+            else
+            {
+                Store.StoreData outdata = null;
+
+                if (TryCreateAndSaveData(info, out outdata))
+                {
+                    if (EchoData(info.Context, outdata))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            //上述步骤执行失败，输出老缓存
+            if (olddata != null)
+            {
+                if (EchoData(info.Context, olddata))
+                {
+                    return true;
+                }
+            }
+
+
+
+            return false;
+        }
+
+        bool TryEchoAndCreateData(RequestInfo info, Store.StoreData olddata)
         {
             string creatingKey = GetCreatingKey(info);
 
@@ -407,7 +484,7 @@ namespace PageCache
                 {
 
                     //return false;
-                    
+
                     int maxLoopTimes = 5;
                     int loopTimes = 0;
 

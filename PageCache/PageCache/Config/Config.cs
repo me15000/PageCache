@@ -243,6 +243,10 @@ namespace PageCache.Config
         public bool MemoryEnable { get; set; }
 
 
+        [XmlAttribute("createFirst"), DefaultSettingValue("true")]
+        public bool CreateFirst { get; set; }
+
+
         [XmlAttribute("storeName")]
         public string StoreName { get; set; }
 
