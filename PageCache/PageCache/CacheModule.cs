@@ -72,10 +72,15 @@ namespace PageCache
             HttpApplication application = source as HttpApplication;
 
             HttpContext context = application.Context;
-                        
-            
 
-            service.Process(context);
+            try
+            {
+                service.Process(context);
+            }
+            catch (Exception ex)
+            {
+                service.ErrorLog.Write(ex.Message);
+            }
         }
 
 

@@ -7,3 +7,8 @@ H:\Github\PageCache5\PageCache\PageCache\bin\Debug\PageCache.pdb
 H:\Github\PageCache5\PageCache\PageCache\obj\Debug\PageCache.csprojResolveAssemblyReference.cache
 H:\Github\PageCache5\PageCache\PageCache\obj\Debug\PageCache.dll
 H:\Github\PageCache5\PageCache\PageCache\obj\Debug\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache\bin\Debug\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache\bin\Debug\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache\obj\Debug\PageCache.csprojResolveAssemblyReference.cache
+E:\Github\PageCache\PageCache\PageCache\obj\Debug\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache\obj\Debug\PageCache.pdb

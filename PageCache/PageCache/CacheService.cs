@@ -955,8 +955,18 @@ namespace PageCache
                 accessLog.Write(requestString);
             }
 
-            var encoding = info.Context.Request.ContentEncoding;
-            if (encoding == null)
+            Encoding encoding = null;
+
+
+            try
+            {
+                encoding = info.Context.Request.ContentEncoding;
+                if (encoding == null)
+                {
+                    encoding = Encoding.UTF8;
+                }
+            }
+            catch (Exception)
             {
                 encoding = Encoding.UTF8;
             }

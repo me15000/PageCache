@@ -40,10 +40,7 @@ namespace PageCache.Setting
 
                 if (rule.IsMatch(context))
                 {
-
-
                     return rule;
-
                 }
             }
 
