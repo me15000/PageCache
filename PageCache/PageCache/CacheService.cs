@@ -237,7 +237,7 @@ namespace PageCache
                     Store.StoreData data = memoryDataList.Get(info.Type, info.Key);
 
 
-                    if (data != null)
+                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
                     {
                         olddata = data;
 
@@ -267,7 +267,7 @@ namespace PageCache
                 {
                     Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
 
-                    if (data != null)
+                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
                     {
                         olddata = data;
 
@@ -296,7 +296,7 @@ namespace PageCache
                 {
                     Store.StoreData data = storeDataList.Get(info.Type, info.Key);
 
-                    if (data != null)
+                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
                     {
                         olddata = data;
 
@@ -325,7 +325,7 @@ namespace PageCache
                 {
                     Store.StoreData data = info.Store.GetData(info.Type, info.Key);
 
-                    if (data != null)
+                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
                     {
                         olddata = data;
 
@@ -447,7 +447,7 @@ namespace PageCache
             }
 
             //上述步骤执行失败，输出老缓存
-            if (olddata != null)
+            if (olddata != null && olddata.BodyData != null && olddata.BodyData.Length >= 0)
             {
                 if (EchoData(info.Context, olddata))
                 {
@@ -611,7 +611,7 @@ namespace PageCache
                         {
                             if (data.HeadersData != null && data.BodyData != null)
                             {
-                                if (data.HeadersData.Length > 0)
+                                if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
                                 {
                                     storeData = data;
                                 }
@@ -649,6 +649,26 @@ namespace PageCache
 
         bool EchoData(HttpContext context, Store.StoreData data)
         {
+
+            if (data == null)
+            {
+                return false;
+            }
+
+            if (data.BodyData == null)
+            {
+                return false;
+            }
+
+            //有异议
+            /*
+            if (data.BodyData.Length == 0)
+            {
+                return false;
+            }
+            */
+
+
             bool echoGZip = IsClientProvidedGZip(context);
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
