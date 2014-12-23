@@ -47,7 +47,7 @@ namespace PageCache.Common
         const int HEADER_RECEIVE_SIZE = 1;
         const string HEADER_END_SIGN = "\r\n\r\n";
         const string HEADER_SINGLE_END_SIGN = "\r\n";
-        const int NONE_DATA_LENGTH = -1;
+        public const int NONE_DATA_LENGTH = -1;
 
         const string TRANSFER_ENCODING = "chunked";
 

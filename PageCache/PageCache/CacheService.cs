@@ -10,6 +10,8 @@ namespace PageCache
 {
     public class CacheService
     {
+        #region 私有字段
+
         Setting.Setting setting;
 
         Store.MemoryDataList memoryDataList = null;
@@ -40,15 +42,18 @@ namespace PageCache
 
         CacheModule module = null;
 
+        #endregion
 
-
-
+        /// <summary>
+        /// 初始化
+        /// </summary>
+        /// <param name="setting"></param>
+        /// <param name="module"></param>
         public CacheService(Setting.Setting setting, CacheModule module)
         {
             this.setting = setting;
 
             this.module = module;
-
 
             var config = setting.Config;
 
@@ -82,15 +87,10 @@ namespace PageCache
 
         }
 
-
-        public void ReloadSetting()
-        {
-            if (this.module != null)
-            {
-                this.module.InitSetting();
-            }
-        }
-
+        /// <summary>
+        /// 输出PageCache当前状态
+        /// </summary>
+        /// <param name="context"></param>
         public void EchoStatus(HttpContext context)
         {
 
@@ -158,9 +158,12 @@ namespace PageCache
             context.ApplicationInstance.CompleteRequest();
         }
 
-
         const string SYSTEM_ERROR_MESSAGE = "The system is busy now. Please try later.";
 
+        /// <summary>
+        /// 入口
+        /// </summary>
+        /// <param name="context"></param>
         public void Process(HttpContext context)
         {
 
@@ -187,8 +190,6 @@ namespace PageCache
 
                 if (info != null)
                 {
-
-
                     requestQueue.In(info);
 
                     if (accessLog != null)
@@ -199,15 +200,10 @@ namespace PageCache
                     if (!EchoData(info))
                     {
                         context.Response.StatusCode = 503;
-
-
-                        context.Response.Write(SYSTEM_ERROR_MESSAGE);
-
                         if (errorLog != null)
                         {
                             errorLog.Write(SYSTEM_ERROR_MESSAGE + info.ToString());
                         }
-
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -231,13 +227,11 @@ namespace PageCache
             if (!hasRefreshKey)
             {
                 //尝试从内存中读缓存
-
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     Store.StoreData data = memoryDataList.Get(info.Type, info.Key);
 
-
-                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
+                    if (data != null && data.BodyData != null)
                     {
                         olddata = data;
 
@@ -259,15 +253,12 @@ namespace PageCache
                     }
                 }
 
-
-
                 //尝试从最后的数据列中读取缓存
-
                 if (true)
                 {
                     Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
+                    if (data != null && data.BodyData != null)
                     {
                         olddata = data;
 
@@ -288,15 +279,13 @@ namespace PageCache
                         }
                     }
                 }
-
-
 
                 //尝试从StoreDataList 中读取缓存
                 if (true)
                 {
                     Store.StoreData data = storeDataList.Get(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
+                    if (data != null && data.BodyData != null)
                     {
                         olddata = data;
 
@@ -325,7 +314,7 @@ namespace PageCache
                 {
                     Store.StoreData data = info.Store.GetData(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null && data.BodyData.Length >= 0)
+                    if (data != null && data.BodyData != null)
                     {
                         olddata = data;
 
@@ -447,7 +436,7 @@ namespace PageCache
             }
 
             //上述步骤执行失败，输出老缓存
-            if (olddata != null && olddata.BodyData != null && olddata.BodyData.Length >= 0)
+            if (olddata != null && olddata.BodyData != null)
             {
                 if (EchoData(info.Context, olddata))
                 {
@@ -605,6 +594,21 @@ namespace PageCache
                 {
                     if (httpdata.BodyData != null && httpdata.Headers != null)
                     {
+
+                        //HEADER 中没有数据长度
+                        if (httpdata.ContentLength == Common.HttpClient.NONE_DATA_LENGTH)
+                        {
+                           
+                        }
+                        else
+                        {
+                            if (httpdata.ContentLength == httpdata.BodyData.Length)
+                            {
+
+                            }
+                        }
+
+
                         var data = ConvertToStoreData(info, httpdata);
 
                         if (data != null)
