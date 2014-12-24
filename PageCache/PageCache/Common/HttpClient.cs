@@ -93,24 +93,33 @@ namespace PageCache.Common
 
             byte[] data = new byte[contentLength];
 
-            int nowContentLength = 0;
-
-            while (true)
+            if (contentLength > 0)
             {
-                byte[] buffer = new byte[BUFFER_SIZE];
+                int nowContentLength = 0;
 
-                int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
-
-                if (receiveCount > 0)
+                try
                 {
-                    Array.Copy(buffer, 0, data, nowContentLength, receiveCount);
+                    while (true)
+                    {
+                        byte[] buffer = new byte[BUFFER_SIZE];
 
-                    nowContentLength += receiveCount;
+                        int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
+
+                        if (receiveCount > 0)
+                        {
+                            Array.Copy(buffer, 0, data, nowContentLength, receiveCount);
+
+                            nowContentLength += receiveCount;
+                        }
+
+                        if (receiveCount == 0)
+                        {
+                            break;
+                        }
+                    }
                 }
-
-                if (receiveCount == 0)
+                catch (Exception ex)
                 {
-                    break;
                 }
             }
 
@@ -124,86 +133,97 @@ namespace PageCache.Common
 
             int nowContentLength = 0;
 
-            while (true)
+            try
             {
-                byte[] buffer = new byte[BUFFER_SIZE];
 
-
-                int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
-
-
-                if (receiveCount > 0)
+                while (true)
                 {
+                    byte[] buffer = new byte[BUFFER_SIZE];
 
-                    for (int i = 0; i < receiveCount; i++)
+
+                    int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
+
+
+                    if (receiveCount > 0)
                     {
-                        list.Add(buffer[i]);
+
+                        for (int i = 0; i < receiveCount; i++)
+                        {
+                            list.Add(buffer[i]);
+                        }
+
+                        nowContentLength += receiveCount;
                     }
 
-                    nowContentLength += receiveCount;
+                    if (receiveCount == 0)
+                    {
+                        break;
+                    }
                 }
 
-                if (receiveCount == 0)
-                {
-                    break;
-                }
+            }
+            catch (Exception ex)
+            {
             }
 
             return list.ToArray();
         }
 
-
-
-
-
         const string CHUNKED_END_SIGN = "\r\n";
 
         public byte[] ParseChunkedData(byte[] data)
         {
-
             int endPosition = data.Length;
 
             List<byte> list = new List<byte>();
 
-            using (MemoryStream stream = new MemoryStream(data))
+            try
             {
-                using (BinaryReader reader = new BinaryReader(stream))
+                using (MemoryStream stream = new MemoryStream(data))
                 {
-                    StringBuilder line = new StringBuilder();
-
-                    while (stream.Position < endPosition)
+                    using (BinaryReader reader = new BinaryReader(stream))
                     {
-                        line.Append(reader.ReadChar());
+                        StringBuilder line = new StringBuilder();
 
-                        string lineString = line.ToString();
-
-                        int inx = lineString.IndexOf(CHUNKED_END_SIGN);
-
-                        if (inx > 0)
+                        while (stream.Position < endPosition)
                         {
-                            int count = Convert.ToInt32(lineString.Substring(0, inx), 16);
+                            line.Append(reader.ReadChar());
 
-                            if (count > 0)
+                            string lineString = line.ToString();
+
+                            int inx = lineString.IndexOf(CHUNKED_END_SIGN);
+
+                            if (inx > 0)
                             {
-                                byte[] bytes = reader.ReadBytes(count);
-                                if (bytes != null)
-                                {
-                                    list.AddRange(bytes);
-                                }
-                            }
+                                int count = Convert.ToInt32(lineString.Substring(0, inx), 16);
 
-                            line.Clear();
+                                if (count > 0)
+                                {
+                                    byte[] bytes = reader.ReadBytes(count);
+                                    if (bytes != null)
+                                    {
+                                        list.AddRange(bytes);
+                                    }
+                                }
+
+                                line.Clear();
+                            }
+                            else if (inx == 0)
+                            {
+                                break;
+                            }
                         }
-                        else if (inx == 0)
-                        {
-                            break;
-                        }
+
+                        reader.Close();
+                        reader.Dispose();
                     }
 
-                    reader.Close();
+                    stream.Close();
+                    stream.Dispose();
                 }
-
-                stream.Close();
+            }
+            catch (Exception ex)
+            {                
             }
 
             return list.ToArray();
@@ -245,7 +265,6 @@ namespace PageCache.Common
                     }
                 }
 
-
                 string headerSplitSign = ": ";
 
                 if (headersStrings.Length > 1)
@@ -279,10 +298,8 @@ namespace PageCache.Common
 
                             info.Headers[key] = value;
                         }
-
                     }
                 }
-
 
                 return info;
             }

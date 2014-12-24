@@ -618,7 +618,6 @@ namespace PageCache
                     StringBuilder exBuilder = new StringBuilder();
                     exBuilder.AppendLine(ex.Message);
                     exBuilder.AppendLine(ex.ToString());
-
                     exBuilder.AppendLine(info.ToString());
 
                     errorLog.Write(exBuilder.ToString());
