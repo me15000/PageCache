@@ -340,7 +340,9 @@ namespace PageCache.Common
                 }
                 else if (info.ContentLength == NONE_DATA_LENGTH)
                 {
-                    if (info.Headers["Transfer-Encoding"] != null && info.Headers["Transfer-Encoding"].Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
+                    string tran = info.Headers["Transfer-Encoding"] ?? string.Empty;
+
+                    if (tran.Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
                     {
                         byte[] receiveData = ReceiveBodyData(socket);
                         data.BodyData = ParseChunkedData(receiveData);
@@ -361,10 +363,7 @@ namespace PageCache.Common
                     data.ContentLength = 0;
                 }
             }
-            else
-            {
-                throw new Exception("info is null");
-            }
+
 
             return data;
 

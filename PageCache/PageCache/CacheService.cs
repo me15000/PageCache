@@ -37,10 +37,11 @@ namespace PageCache
             get { return accessLog; }
         }
 
-        const string STATUS_KEY = "__status__";
 
 
         CacheModule module = null;
+
+        Config.Config config = null;
 
         #endregion
 
@@ -55,7 +56,7 @@ namespace PageCache
 
             this.module = module;
 
-            var config = setting.Config;
+            config = setting.Config;
 
             this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
 
@@ -168,7 +169,7 @@ namespace PageCache
         {
 
 
-            if (context.Request.RawUrl.IndexOf(STATUS_KEY) >= 0)
+            if (context.Request.RawUrl.IndexOf(this.config.StatusKey) >= 0)
             {
                 EchoStatus(context);
                 return;
@@ -200,10 +201,12 @@ namespace PageCache
                     if (!EchoData(info))
                     {
                         context.Response.StatusCode = 503;
+                        
                         if (errorLog != null)
                         {
                             errorLog.Write(SYSTEM_ERROR_MESSAGE + info.ToString());
                         }
+                        
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -349,13 +352,6 @@ namespace PageCache
                         }
                     }
                 }
-                else
-                {
-                    if (errorLog != null)
-                    {
-                        errorLog.Write("store is null");
-                    }
-                }
             }
 
             #endregion
@@ -461,7 +457,6 @@ namespace PageCache
                 if (!creatingKeyList.Contains(creatingKey))
                 {
                     ThreadPool.QueueUserWorkItem(TryCreateDataAsync, info);
-                    //TryCreateDataAsync(info);
                 }
 
 
@@ -473,9 +468,7 @@ namespace PageCache
             else
             {
                 //创建并输出缓存
-
                 //保证只有一个创建进程,等待这个进程完成
-
                 if (creatingKeyList.Contains(creatingKey))
                 {
 
@@ -563,14 +556,7 @@ namespace PageCache
 
                 return true;
             }
-            else
-            {
-                /*
-                if (this.accessLog!=null)
-                {
-                    this.accessLog.Write(" TryCreateAndSaveData out data is null ");
-                }*/
-            }
+
 
             return false;
         }
@@ -588,8 +574,6 @@ namespace PageCache
 
             creatingKeyList.Add(creatingKey);
 
-
-
             byte[] rheadersData = GetRequestHeadersData(info);
 
             try
@@ -605,22 +589,11 @@ namespace PageCache
                         storeData = data;
                     }
                 }
-           
+
             }
             catch (Exception ex)
             {
 
-                if (errorLog != null)
-                {
-
-                    StringBuilder exBuilder = new StringBuilder();
-                    exBuilder.AppendLine(ex.Message);
-                    exBuilder.AppendLine(ex.ToString());
-                    exBuilder.AppendLine(info.ToString());
-
-                    errorLog.Write(exBuilder.ToString());
-
-                }
             }
 
             lock (this)
@@ -706,12 +679,7 @@ namespace PageCache
                         }
                         catch (Exception ex)
                         {
-                            /*
-                            if (errorLog != null)
-                            {
-                                errorLog.Write(context.Request.Url.ToString() + "\r\n\r\n" + ex.Message);
-                            }
-                            */
+
                         }
 
                         outputStream.Close();

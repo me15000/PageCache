@@ -60,6 +60,9 @@ namespace PageCache.Config
         [XmlAttribute("refreshKey")]
         public string RefreshKey { get; set; }
 
+        [XmlAttribute("statusKey"), DefaultSettingValue("__status__")]
+        public string StatusKey { get; set; }
+
         [XmlAttribute("errorLogPath")]
         public string ErrorLogPath { get; set; }
 
