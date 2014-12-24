@@ -47,7 +47,7 @@ namespace PageCache.Common
         const int HEADER_RECEIVE_SIZE = 1;
         const string HEADER_END_SIGN = "\r\n\r\n";
         const string HEADER_SINGLE_END_SIGN = "\r\n";
-        public const int NONE_DATA_LENGTH = -1;
+        const int NONE_DATA_LENGTH = -1;
 
         const string TRANSFER_ENCODING = "chunked";
 
@@ -223,7 +223,7 @@ namespace PageCache.Common
                 }
             }
             catch (Exception ex)
-            {                
+            {
             }
 
             return list.ToArray();
@@ -331,17 +331,19 @@ namespace PageCache.Common
                     Headers = info.Headers
                 };
 
+
+
+
                 if (info.ContentLength > 0)
                 {
                     data.BodyData = ReceiveBodyData(socket, info.ContentLength);
                 }
-                else
+                else if (info.ContentLength == NONE_DATA_LENGTH)
                 {
-                    if (info.Headers["Transfer-Encoding"].Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
+                    if (info.Headers["Transfer-Encoding"] != null && info.Headers["Transfer-Encoding"].Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
                     {
                         byte[] receiveData = ReceiveBodyData(socket);
                         data.BodyData = ParseChunkedData(receiveData);
-
                     }
                     else
                     {
@@ -354,6 +356,14 @@ namespace PageCache.Common
                 {
                     data.ContentLength = data.BodyData.Length;
                 }
+                else
+                {
+                    data.ContentLength = 0;
+                }
+            }
+            else
+            {
+                throw new Exception("info is null");
             }
 
             return data;

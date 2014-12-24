@@ -599,15 +599,13 @@ namespace PageCache
 
                 if (httpdata != null)
                 {
-                 
-
                     var data = ConvertHttpDataToStoreData(info, httpdata);
-
                     if (data != null && data.HeadersData != null)
                     {
                         storeData = data;
                     }
                 }
+           
             }
             catch (Exception ex)
             {

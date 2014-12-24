@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using PageCache.Store.SQLServer;
+
 namespace PageCache.Store
 {
     public class Factory
@@ -10,7 +12,7 @@ namespace PageCache.Store
             {
                 if (configStore.FullTypeName.IndexOf("PageCache.Store.SQLServer") >= 0)
                 {
-                    return new SQLServer.SQLServerStore(configStore.ConnectionString);
+                    return new SQLServerStore(configStore.ConnectionString);
                 }
                 else
                 {
