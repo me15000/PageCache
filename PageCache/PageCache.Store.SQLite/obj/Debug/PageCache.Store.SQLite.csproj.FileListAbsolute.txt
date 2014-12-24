@@ -18,3 +18,13 @@ C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLite\bin\D
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.csprojResolveAssemblyReference.cache
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.dll
 C:\Users\IFHZ\Documents\GitHub\PageCache5\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.dll.config
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.Store.SQLite.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\System.Data.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Debug\System.Data.SQLite.xml
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.csprojResolveAssemblyReference.cache
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Debug\PageCache.Store.SQLite.pdb

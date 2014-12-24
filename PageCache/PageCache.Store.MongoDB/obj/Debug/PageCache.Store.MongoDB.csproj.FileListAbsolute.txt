@@ -57,3 +57,12 @@ H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.pdb
 H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
 H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.dll
 H:\Github\PageCache5\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.Store.MongoDB.dll
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.Store.MongoDB.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\MongoDB.Bson.dll
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\MongoDB.Driver.dll
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\bin\Debug\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.csprojResolveAssemblyReference.cache
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.dll
+E:\Github\PageCache\PageCache\PageCache.Store.MongoDB\obj\Debug\PageCache.Store.MongoDB.pdb
