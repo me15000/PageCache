@@ -563,6 +563,14 @@ namespace PageCache
 
                 return true;
             }
+            else
+            {
+                /*
+                if (this.accessLog!=null)
+                {
+                    this.accessLog.Write(" TryCreateAndSaveData out data is null ");
+                }*/
+            }
 
             return false;
         }
@@ -591,17 +599,14 @@ namespace PageCache
 
                 if (httpdata != null)
                 {
+                 
 
-                    var data = ConvertToStoreData(info, httpdata);
+                    var data = ConvertHttpDataToStoreData(info, httpdata);
 
-                    if (data != null)
+                    if (data != null && data.HeadersData != null)
                     {
-                        if (data.HeadersData != null && data.BodyData != null)
-                        {
-                            storeData = data;
-                        }
+                        storeData = data;
                     }
-
                 }
             }
             catch (Exception ex)
@@ -614,7 +619,7 @@ namespace PageCache
                     exBuilder.AppendLine(ex.Message);
                     exBuilder.AppendLine(ex.ToString());
 
-                    exBuilder.AppendLine(RequestInfo.ToString(info));
+                    exBuilder.AppendLine(info.ToString());
 
                     errorLog.Write(exBuilder.ToString());
 
@@ -638,7 +643,7 @@ namespace PageCache
             {
                 return false;
             }
-            
+
             bool echoGZip = IsClientProvidedGZip(context);
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
@@ -719,7 +724,6 @@ namespace PageCache
                     memoryStream.Close();
                     memoryStream.Dispose();
                 }
-
             }
 
 
@@ -968,7 +972,7 @@ namespace PageCache
         }
 
 
-        Store.StoreData ConvertToStoreData(RequestInfo info, Common.HttpData httpdata)
+        Store.StoreData ConvertHttpDataToStoreData(RequestInfo info, Common.HttpData httpdata)
         {
 
             Store.StoreData data = new Store.StoreData();
@@ -980,7 +984,7 @@ namespace PageCache
 
             bool echoGZip = IsClientProvidedGZip(info.Context);
 
-            if (httpdata.BodyData != null)
+            if (httpdata.BodyData != null && httpdata.ContentLength > 0)
             {
                 if (data_accept_encoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -1007,11 +1011,12 @@ namespace PageCache
             }
             else
             {
-                if (errorLog != null)
-                {
-                    errorLog.Write("ConvertToStoreData httpdata.BodyData is null ");
-                }
+                data.BodyData = new byte[0];
+
+
             }
+
+
 
 
             if (httpdata.Headers.AllKeys.Contains("Server"))

@@ -330,13 +330,12 @@ namespace PageCache.Common
                     {
                         data.BodyData = ReceiveBodyData(socket);
                     }
-
-                    if (data.BodyData != null)
-                    {
-                        info.ContentLength = data.BodyData.Length;
-                    }
+                }
 
 
+                if (data.BodyData != null)
+                {
+                    data.ContentLength = data.BodyData.Length;
                 }
             }
 
