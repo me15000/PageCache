@@ -324,11 +324,19 @@ namespace PageCache.Common
                     {
                         byte[] receiveData = ReceiveBodyData(socket);
                         data.BodyData = ParseChunkedData(receiveData);
+
                     }
                     else
                     {
                         data.BodyData = ReceiveBodyData(socket);
                     }
+
+                    if (data.BodyData != null)
+                    {
+                        info.ContentLength = data.BodyData.Length;
+                    }
+
+
                 }
             }
 
@@ -414,7 +422,9 @@ namespace PageCache.Common
 
                 if (times < loopTimes)
                 {
-                    Thread.Sleep(200);
+                    //Thread.Sleep(200);
+                    System.Threading.Thread.CurrentThread.Join(200);
+
 
                     goto loop;
                 }
@@ -473,7 +483,9 @@ namespace PageCache.Common
 
                 if (times < loopTimes)
                 {
-                    Thread.Sleep(200);
+                    //Thread.Sleep(200);
+                    System.Threading.Thread.CurrentThread.Join(200);
+
 
                     goto loop;
                 }

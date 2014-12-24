@@ -506,7 +506,6 @@ namespace PageCache
                             goto loop;
                         }
                     }
-                    /**/
 
                 }
                 else
@@ -541,11 +540,11 @@ namespace PageCache
         {
             outdata = CreateData(info);
 
-            if (outdata != null)
+            if (outdata != null && outdata.HeadersData != null)
             {
 
                 //存入store
-                if (outdata.Seconds > 0 && outdata.BodyData.Length >= 0)
+                if (outdata.Seconds > 0 && outdata.HeadersData.Length >= 0)
                 {
                     storeDataList.Add(info.Store, outdata);
                 }
@@ -592,36 +591,17 @@ namespace PageCache
 
                 if (httpdata != null)
                 {
-                    if (httpdata.BodyData != null && httpdata.Headers != null)
+
+                    var data = ConvertToStoreData(info, httpdata);
+
+                    if (data != null)
                     {
-
-                        //HEADER 中没有数据长度
-                        if (httpdata.ContentLength == Common.HttpClient.NONE_DATA_LENGTH)
+                        if (data.HeadersData != null && data.BodyData != null)
                         {
-                           
-                        }
-                        else
-                        {
-                            if (httpdata.ContentLength == httpdata.BodyData.Length)
-                            {
-
-                            }
-                        }
-
-
-                        var data = ConvertToStoreData(info, httpdata);
-
-                        if (data != null)
-                        {
-                            if (data.HeadersData != null && data.BodyData != null)
-                            {
-                                if (data.HeadersData.Length > 0 && data.BodyData.Length > 0)
-                                {
-                                    storeData = data;
-                                }
-                            }
+                            storeData = data;
                         }
                     }
+
                 }
             }
             catch (Exception ex)
@@ -658,21 +638,7 @@ namespace PageCache
             {
                 return false;
             }
-
-            if (data.BodyData == null)
-            {
-                return false;
-            }
-
-            //有异议
-            /*
-            if (data.BodyData.Length == 0)
-            {
-                return false;
-            }
-            */
-
-
+            
             bool echoGZip = IsClientProvidedGZip(context);
 
             string headerstrings = Encoding.ASCII.GetString(data.HeadersData);
@@ -681,7 +647,8 @@ namespace PageCache
 
             if (hhs != null)
             {
-                //context.Response.StatusCode = hhs.StatusCode;
+                context.Response.StatusCode = hhs.StatusCode;
+
                 context.Response.StatusDescription = hhs.StatusDescription;
 
                 foreach (string k in hhs.Headers.Keys)
@@ -699,11 +666,11 @@ namespace PageCache
                 }
             }
 
-            if (context.Response.StatusCode == 200)
+
+            if (context.Response.StatusCode >= 100 && context.Response.StatusCode < 400)
             {
                 EchoBrowserCache(context, data);
             }
-
 
             var response = context.Response;
             response.BufferOutput = false;
