@@ -38,6 +38,8 @@ namespace PageCache
                 {
                     Setting.Setting setting = null;
 
+                    config.StatusKey = config.StatusKey ?? "__status__";
+
                     setting = new Setting.Setting(config);
 
                     if (setting != null)
