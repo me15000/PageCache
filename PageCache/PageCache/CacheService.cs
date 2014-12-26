@@ -14,13 +14,13 @@ namespace PageCache
 
         Setting.Setting setting;
 
-        Store.MemoryDataList memoryDataList = null;
+        //Store.MemoryDataList memoryDataList = null;
 
         Store.LastReadDataList lastReadDataList = null;
 
         Store.StoreDataList storeDataList = null;
 
-        RequestQueue requestQueue = null;
+        //RequestQueue requestQueue = null;
 
         Common.HttpClient httpClient;
 
@@ -58,7 +58,7 @@ namespace PageCache
 
             config = setting.Config;
 
-            this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
+            //this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
 
             this.lastReadDataList = new Store.LastReadDataList(config.StoreBufferSize);
 
@@ -66,7 +66,7 @@ namespace PageCache
 
 
 
-            this.requestQueue = new RequestQueue();
+            //this.requestQueue = new RequestQueue();
 
             this.httpClient = new Common.HttpClient();
 
@@ -114,7 +114,7 @@ namespace PageCache
                 }
             }
 
-
+            /*
             if (type.IndexOf("all") >= 0 || type.IndexOf("mem") >= 0)
             {
 
@@ -127,7 +127,7 @@ namespace PageCache
 
                     context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
                 }
-            }
+            }*/
 
             if (type.IndexOf("all") >= 0 || type.IndexOf("last") >= 0)
             {
@@ -191,7 +191,7 @@ namespace PageCache
 
                 if (info != null)
                 {
-                    requestQueue.In(info);
+                    //requestQueue.In(info);
 
                     if (accessLog != null)
                     {
@@ -210,7 +210,7 @@ namespace PageCache
                     }
 
                     context.ApplicationInstance.CompleteRequest();
-                    requestQueue.Out(info);
+                    //requestQueue.Out(info);
                 }
             }
         }
@@ -230,6 +230,7 @@ namespace PageCache
             if (!hasRefreshKey)
             {
                 //尝试从内存中读缓存
+                /*
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     Store.StoreData data = memoryDataList.Get(info.Type, info.Key);
@@ -255,6 +256,8 @@ namespace PageCache
                         }
                     }
                 }
+                */
+
 
                 //尝试从最后的数据列中读取缓存
                 if (true)
@@ -324,6 +327,7 @@ namespace PageCache
 
                         lastReadDataList.Add(data);
                         //如果启用了内存并且达到并发数量时,使用内存缓存
+                        /*
                         if (info.Rule.ConfigRule.MemoryEnable)
                         {
                             int n = requestQueue.GetCount(info);
@@ -333,7 +337,7 @@ namespace PageCache
                                 memoryDataList.Add(data);
                             }
                         }
-
+                        */
 
                         if (setting.Config.ReadOnly)
                         {
@@ -546,6 +550,7 @@ namespace PageCache
                 lastReadDataList.Add(outdata);
 
                 //存入 memory
+                /*
                 if (info.Rule.ConfigRule.MemoryEnable)
                 {
                     if (memoryDataList.Get(info.Type, info.Key) != null)
@@ -553,7 +558,7 @@ namespace PageCache
                         memoryDataList.Add(outdata);
                     }
                 }
-
+                */
                 return true;
             }
 
