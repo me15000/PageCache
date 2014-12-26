@@ -199,12 +199,12 @@ namespace PageCache
                     if (!EchoData(info))
                     {
                         context.Response.StatusCode = 503;
-                        
+
                         if (errorLog != null)
                         {
                             errorLog.Write(SYSTEM_ERROR_MESSAGE + info.ToString());
                         }
-                        
+
                     }
 
                     context.ApplicationInstance.CompleteRequest();
@@ -608,6 +608,7 @@ namespace PageCache
         }
 
 
+        const int CHUNKED_SIZE = 1024 * 16;
 
         bool EchoData(HttpContext context, Store.StoreData data)
         {
@@ -650,49 +651,55 @@ namespace PageCache
                 EchoBrowserCache(context, data);
             }
 
-            var response = context.Response;
-            response.BufferOutput = false;
 
+            var response = context.Response;
             if (data.BodyData != null)
             {
-                using (var memoryStream = new MemoryStream(data.BodyData))
+                var bodyData = data.BodyData;
+
+                if (bodyData.Length > CHUNKED_SIZE)
                 {
-                    using (var outputStream = response.OutputStream)
+                    response.BufferOutput = false;
+                    
+                    try
                     {
-
-                        byte[] buffer = new byte[256];
-                        int count;
-
-                        try
+                        using (var outputStream = response.OutputStream)
                         {
-                            while ((count = memoryStream.Read(buffer, 0, buffer.Length)) != 0)
-                            {
-                                outputStream.Write(buffer, 0, count);
+                            int total = bodyData.Length;
 
-                                if (response.IsClientConnected)
+                            int count = 0;
+
+                            while (count < total)
+                            {
+                                outputStream.WriteByte(bodyData[count]);
+
+                                count++;
+
+                                if (count % CHUNKED_SIZE == 0)
                                 {
                                     outputStream.Flush();
                                 }
-                                else
-                                {
-                                    break;
-                                }
-
                             }
-                        }
-                        catch (Exception ex)
-                        {
 
-                        }
+                            outputStream.Flush();
 
-                        outputStream.Close();
-                        outputStream.Dispose();
+
+                            outputStream.Close();
+                            outputStream.Dispose();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
                     }
 
-                    memoryStream.Close();
-                    memoryStream.Dispose();
+                }
+                else
+                {
+                    response.BinaryWrite(data.BodyData);
                 }
             }
+
+
 
 
             return true;
