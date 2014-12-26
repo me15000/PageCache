@@ -307,37 +307,36 @@ namespace PageCache.Store
                     }
                 }
 
-                //清理掉不匹配的
 
 
-                if (true)
+                 //cacheKeyList 有多余
+                if (cacheKeyList.Count > this.capacity)
                 {
-                    var keys = cacheKeyList.ToArray();
-
-                    lock (this)
+                    var array = cacheKeyList.ToArray();
+                    int removeCount = array.Length - this.capacity;
+                    //清理掉多余的
+                    if (removeCount > 0)
                     {
-                        for (int i = 0; i < keys.Length; i++)
+                        for (int i = 0; i < removeCount; i++)
                         {
-                            string k = keys[i];
+                            string key = array[i];
 
-                            if (!cacheData.ContainsKey(k))
-                            {
-                                cacheKeyList.Remove(k);
-                            }
+                            cacheData.Remove(key);
+                            cacheKeyList.Remove(key);
                         }
                     }
                 }
 
-
-                if (true)
+                //cacheData 有多余
+                if (cacheData.Count > this.capacity)
                 {
-                    var keys = cacheData.Keys;
-
-                    foreach (string k in keys)
+                    foreach (object key in cacheData.Keys)
                     {
+                        string k = key.ToString();
+
                         if (!cacheKeyList.Contains(k))
                         {
-                            cacheData.Remove(k);
+                            cacheData.Remove(key);
                         }
                     }
                 }

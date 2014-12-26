@@ -13,8 +13,6 @@ namespace PageCache.Store
 
 
 
-
-
         public List<StoreData> DataList
         {
             get
@@ -54,7 +52,6 @@ namespace PageCache.Store
         {
             get { return capacity; }
         }
-
 
 
         const string CACHE_KEY_LIST_KEY = "LastReadDataList_KEY_LIST";
@@ -187,7 +184,7 @@ namespace PageCache.Store
             }
 
 
-            if (cacheData.Count >= this.capacity || cacheData.Count != cacheKeyList.Count)
+            if (cacheData.Count >= this.capacity || cacheKeyList.Count >= this.capacity)
             {
                 ThreadPool.QueueUserWorkItem(ClearAsync, null);
             }
@@ -213,66 +210,39 @@ namespace PageCache.Store
 
             isClearing = true;
 
-            int removeCount = cacheData.Count - this.capacity;
-
-
             try
             {
-                //清理掉多余的
-                if (removeCount > 0)
+                //cacheKeyList 有多余
+                if (cacheKeyList.Count > this.capacity)
                 {
-                    lock (this)
+                    var array = cacheKeyList.ToArray();
+                    int removeCount = array.Length - this.capacity;
+                    //清理掉多余的
+                    if (removeCount > 0)
                     {
-                        int nowCount = 0;
-
-                        while (nowCount < removeCount)
+                        for (int i = 0; i < removeCount; i++)
                         {
-                            if (cacheKeyList.Count > 0)
-                            {
-                                string key = cacheKeyList[0];
+                            string key = array[i];
 
-                                cacheData.Remove(key);
-                                cacheKeyList.Remove(key);
-
-                                nowCount++;
-                            }
+                            cacheData.Remove(key);
+                            cacheKeyList.Remove(key);
                         }
                     }
                 }
 
-                //清理掉不匹配的
-                if (true)
+                //cacheData 有多余
+                if (cacheData.Count > this.capacity)
                 {
-                    var keys = cacheKeyList.ToArray();
-
-                    lock (this)
+                    foreach (object key in cacheData.Keys)
                     {
-                        for (int i = 0; i < keys.Length; i++)
-                        {
-                            string k = keys[i];
+                        string k = key.ToString();
 
-                            if (!cacheData.ContainsKey(k))
-                            {
-                                cacheKeyList.Remove(k);
-                            }
-                        }
-                    }
-                }
-
-
-                if (true)
-                {
-                    var keys = cacheData.Keys;
-
-                    foreach (string k in keys)
-                    {
                         if (!cacheKeyList.Contains(k))
                         {
-                            cacheData.Remove(k);
+                            cacheData.Remove(key);
                         }
                     }
                 }
-
 
             }
             catch (Exception ex)
