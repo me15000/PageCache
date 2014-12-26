@@ -40,6 +40,10 @@ namespace PageCache
 
                     config.StatusKey = config.StatusKey ?? "__status__";
 
+                    config.LastReadBufferSize = config.LastReadBufferSize > 0 ? config.LastReadBufferSize : 1000;
+
+                    config.StoreBufferSize = config.StoreBufferSize > 0 ? config.StoreBufferSize : 100;
+
                     setting = new Setting.Setting(config);
 
                     if (setting != null)
