@@ -80,8 +80,11 @@ namespace PageCache.Config
         public string HeadersFilters { get; set; }
 
 
-        [XmlAttribute("storeBufferSize"), DefaultSettingValue("1000")]
+        [XmlAttribute("storeBufferSize"), DefaultSettingValue("100")]
         public int StoreBufferSize { get; set; }
+
+        [XmlAttribute("lastReadBufferSize"), DefaultSettingValue("1000")]
+        public int LastReadBufferSize { get; set; }
 
         #endregion
 

@@ -60,11 +60,9 @@ namespace PageCache
 
             //this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
 
-            this.lastReadDataList = new Store.LastReadDataList(config.StoreBufferSize);
+            this.lastReadDataList = new Store.LastReadDataList(config.LastReadBufferSize);
 
             this.storeDataList = new Store.StoreDataList(config.StoreBufferSize);
-
-
 
             //this.requestQueue = new RequestQueue();
 
