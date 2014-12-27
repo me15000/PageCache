@@ -38,11 +38,24 @@ namespace PageCache
                 {
                     Setting.Setting setting = null;
 
-                    config.StatusKey = config.StatusKey ?? "__status__";
 
-                    config.LastReadBufferSize = config.LastReadBufferSize > 0 ? config.LastReadBufferSize : 1000;
 
-                    config.StoreBufferSize = config.StoreBufferSize > 0 ? config.StoreBufferSize : 100;
+                    if (string.IsNullOrEmpty(config.StatusKey))
+                    {
+                        config.StatusKey = "__status__";
+                    }
+
+                    if (config.LastReadBufferSize <= 0)
+                    {
+                        config.LastReadBufferSize = 1000;
+                    }
+
+                    if (config.StoreBufferSize <= 0)
+                    {
+                        config.StoreBufferSize = 100;
+                    }
+
+
 
                     setting = new Setting.Setting(config);
 

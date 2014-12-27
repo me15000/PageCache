@@ -45,8 +45,6 @@ CREATE TABLE `data_{n}` (
 </textarea>
 
 <textarea id="sql_format_mssql" style="display:none">
-DROP TABLE [data_{n}];
-go
 CREATE TABLE [data_{n}](
 	[KEY] [char](32) NOT NULL,
 	[Type] [varchar](30) NOT NULL,
@@ -66,9 +64,6 @@ CREATE TABLE [data_{n}](
 	
 ) TEXTIMAGE_ON [area{area}]
 go 
-
-
-
 </textarea>
 
 
