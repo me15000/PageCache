@@ -30,34 +30,18 @@ namespace PageCache
             }
             else
             {
+
+                string configPath = ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
+
+                if (configPath.IndexOf("://") == -1)
+                {
+                    configPath = AppDomain.CurrentDomain.BaseDirectory + configPath;
+                }
+
                 Config.Config config = null;
-
-                string configPath = AppDomain.CurrentDomain.BaseDirectory + ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
-
                 if (Config.ConfigBuilder.TryParseConfig(configPath, out config))
                 {
-                    Setting.Setting setting = null;
-
-
-
-                    if (string.IsNullOrEmpty(config.StatusKey))
-                    {
-                        config.StatusKey = "__status__";
-                    }
-
-                    if (config.LastReadBufferSize <= 0)
-                    {
-                        config.LastReadBufferSize = 1000;
-                    }
-
-                    if (config.StoreBufferSize <= 0)
-                    {
-                        config.StoreBufferSize = 100;
-                    }
-
-
-
-                    setting = new Setting.Setting(config);
+                    Setting.Setting setting = new Setting.Setting(config);
 
                     if (setting != null)
                     {
@@ -67,7 +51,15 @@ namespace PageCache
 
                             if (service != null)
                             {
-                                cache.Insert(CACHE_KEY, service, new System.Web.Caching.CacheDependency(configPath));
+                                if (configPath.IndexOf("://") > 0)
+                                {
+                                    cache.Insert(CACHE_KEY, service);
+                                }
+                                else
+                                {
+                                    cache.Insert(CACHE_KEY, service, new System.Web.Caching.CacheDependency(configPath));
+                                }
+
                             }
                         }
                     }

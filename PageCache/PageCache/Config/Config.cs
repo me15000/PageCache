@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
@@ -16,22 +17,75 @@ namespace PageCache.Config
         {
             config = null;
 
-            XmlSerializer serializer = new XmlSerializer(typeof(Config));
-
-
             bool success = false;
 
-            if (File.Exists(xmlpath))
-            {
-                using (var fs = File.OpenRead(xmlpath))
-                {
-                    config = (Config)serializer.Deserialize(fs);
-                    success = true;
 
-                    fs.Close();
-                    fs.Dispose();
+            XmlSerializer serializer = new XmlSerializer(typeof(Config));
+
+            try
+            {
+                //网络地址
+                if (xmlpath.IndexOf("://") > 0)
+                {
+                    WebClient wc = new WebClient();
+                    byte[] data = wc.DownloadData(xmlpath);
+                    wc.Dispose();
+
+                    using (MemoryStream stream = new MemoryStream(data))
+                    {
+                        stream.Seek(0, SeekOrigin.Begin);
+
+                        config = (Config)serializer.Deserialize(stream);
+
+                        success = true;
+
+                        stream.Close();
+                        stream.Dispose();
+                    }
+
+                }
+                else
+                {
+                    //本地
+                    if (File.Exists(xmlpath))
+                    {
+                        using (var fs = File.OpenRead(xmlpath))
+                        {
+                            config = (Config)serializer.Deserialize(fs);
+                            success = true;
+
+                            fs.Close();
+                            fs.Dispose();
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+
+            if (success)
+            {
+
+                if (string.IsNullOrEmpty(config.StatusKey))
+                {
+                    config.StatusKey = "__status__";
+                }
+
+                if (config.LastReadBufferSize <= 0)
+                {
+                    config.LastReadBufferSize = 1000;
+                }
+
+                if (config.StoreBufferSize <= 0)
+                {
+                    config.StoreBufferSize = 100;
                 }
             }
+
 
             return success;
         }
