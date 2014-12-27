@@ -300,9 +300,10 @@ namespace PageCache.Config
         [XmlAttribute("cacheSeconds")]
         public int CacheSeconds { get; set; }
 
+        /*
         [XmlAttribute("memoryEnable"), DefaultSettingValue("false")]
         public bool MemoryEnable { get; set; }
-
+        */
 
         [XmlAttribute("createFirst"), DefaultSettingValue("true")]
         public bool CreateFirst { get; set; }
