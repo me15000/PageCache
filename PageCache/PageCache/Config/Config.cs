@@ -101,10 +101,10 @@ namespace PageCache.Config
         [XmlArray("hosts")]
         public List<Host> Hosts { get; set; }
 
-
+        /*
         [XmlElement("memoryRule")]
         public MemoryRule MemoryRule { get; set; }
-
+        */
 
 
         [XmlArray("rules")]
@@ -193,6 +193,7 @@ namespace PageCache.Config
     }
 
 
+    /*
     [Serializable]
     public class MemoryRule
     {
@@ -215,7 +216,7 @@ namespace PageCache.Config
 
     }
 
-
+    */
 
 
     [Serializable]

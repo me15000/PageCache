@@ -121,7 +121,38 @@ namespace PageCache.Setting
 
             if (endPoint == null)
             {
-                endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80);
+
+                string domain = this.configHost.Domain;
+                if (string.IsNullOrEmpty(domain))
+                {
+                    endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80);
+                }
+                else
+                {
+                    domain = domain.Trim();
+
+                    if (domain.IndexOf("local", StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80);
+                    }
+                    else
+                    {
+                        IPAddress[] addresses = Dns.GetHostAddresses(domain);
+                        if (addresses != null)
+                        {
+                            if (addresses.Length > 0)
+                            {
+                                endPoint = new IPEndPoint(addresses[0], 80);
+                            }
+                        }
+                    }
+
+
+                    if (endPoint == null)
+                    {
+                        endPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 80);
+                    }
+                }
             }
 
 

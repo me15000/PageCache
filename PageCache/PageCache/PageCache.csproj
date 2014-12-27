@@ -55,7 +55,6 @@
     <Compile Include="Config\Config.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestInfo.cs" />
-    <Compile Include="RequestQueue.cs" />
     <Compile Include="Setting\Hosts.cs" />
     <Compile Include="Setting\Rules.cs" />
     <Compile Include="Setting\Setting.cs" />
@@ -63,7 +62,6 @@
     <Compile Include="Store\Factory.cs" />
     <Compile Include="Store\IStore.cs" />
     <Compile Include="Store\LastReadDataList.cs" />
-    <Compile Include="Store\MemoryDataList.cs" />
     <Compile Include="Store\SQLServer\SQLServerHelper.cs" />
     <Compile Include="Store\SQLServer\SQLServerStore.cs" />
     <Compile Include="Store\StoreData.cs" />
