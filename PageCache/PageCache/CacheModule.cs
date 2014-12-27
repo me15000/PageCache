@@ -20,7 +20,7 @@ namespace PageCache
         //初始化设置
         public bool InitSetting()
         {
-            var cache = HttpContext.Current.Cache;
+            var cache = HttpRuntime.Cache;
 
             object cacheObject = cache.Get(CACHE_KEY);
 
@@ -75,7 +75,14 @@ namespace PageCache
             return false;
         }
 
+        /*
+        public void ReSetting()
+        {
+            var cache = HttpRuntime.Cache;
 
+            cache.Remove(CACHE_KEY);
+        }
+        */
 
         //当用户请求时触发
         public void OnBeginRequest(Object source, EventArgs e)
@@ -83,6 +90,13 @@ namespace PageCache
             HttpApplication application = source as HttpApplication;
 
             HttpContext context = application.Context;
+
+            /*
+            if (context.Request.RawUrl.IndexOf("xx") >= 0)
+            {
+                ReSetting();
+            }
+            */
 
             try
             {
