@@ -264,6 +264,8 @@ namespace PageCache
 
                     if (data != null && data.BodyData != null)
                     {
+                    
+
                         olddata = data;
 
                         if (setting.Config.ReadOnly)
@@ -291,6 +293,7 @@ namespace PageCache
 
                     if (data != null && data.BodyData != null)
                     {
+                      
                         olddata = data;
 
                         if (setting.Config.ReadOnly)
@@ -320,6 +323,8 @@ namespace PageCache
 
                     if (data != null && data.BodyData != null)
                     {
+
+
                         olddata = data;
 
 

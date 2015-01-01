@@ -38,3 +38,13 @@ H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\Syst
 H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.csprojResolveAssemblyReference.cache
 H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.dll
 H:\Github\PageCache5\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\PageCache.Store.SQLite.dll.config
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\PageCache.Store.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\PageCache.Store.SQLite.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\System.Data.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\bin\Release\System.Data.SQLite.xml
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.csprojResolveAssemblyReference.cache
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.dll
+E:\Github\PageCache\PageCache\PageCache.Store.SQLite\obj\Release\PageCache.Store.SQLite.pdb

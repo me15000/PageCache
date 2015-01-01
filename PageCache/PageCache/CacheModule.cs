@@ -6,7 +6,7 @@ namespace PageCache
 {
     public class CacheModule : IHttpModule
     {
-        const string CACHE_KEY = "PAGECACHE_CacheService";
+        const string CACHE_KEY = "PAGECACHE";
 
         CacheService service = null;
 
@@ -17,12 +17,91 @@ namespace PageCache
                 context.BeginRequest += new EventHandler(OnBeginRequest);
             }
         }
-        //初始化设置
-        public bool InitSetting()
+
+        public Config.Config GetCacheConfig()
         {
+            string cache_key = CACHE_KEY + "_Config";
+
+
+            Config.Config config = null;
+
             var cache = HttpRuntime.Cache;
 
-            object cacheObject = cache.Get(CACHE_KEY);
+
+            object cacheObject = cache.Get(cache_key);
+
+            if (cacheObject != null)
+            {
+                config = cacheObject as Config.Config;
+            }
+            else
+            {
+                string configPath = ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
+
+                if (configPath.IndexOf("://") == -1)
+                {
+                    configPath = AppDomain.CurrentDomain.BaseDirectory + configPath;
+                }
+
+
+                if (Config.ConfigBuilder.TryParseConfig(configPath, out config))
+                {
+                    if (configPath.IndexOf("://") > 0)
+                    {
+                        cache.Insert(cache_key, config);
+                    }
+                    else
+                    {
+                        cache.Insert(cache_key, config, new System.Web.Caching.CacheDependency(configPath));
+                    }
+                }
+            }
+
+            return config;
+        }
+
+        public Setting.Setting GetCacheSetting()
+        {
+            string cache_key = CACHE_KEY + "_Setting";
+
+            Setting.Setting setting = null;
+
+            var cache = HttpRuntime.Cache;
+
+            object cacheObject = cache.Get(cache_key);
+
+            if (cacheObject != null)
+            {
+                setting = cacheObject as Setting.Setting;
+            }
+            else
+            {
+
+                var config = GetCacheConfig();
+
+                if (config != null)
+                {
+                    setting = new Setting.Setting(config);
+
+                    if (setting != null)
+                    {
+                        cache.Insert(cache_key, setting);
+                    }
+                }
+            }
+
+            return setting;
+        }
+
+        public CacheService GetCacheService()
+        {
+            string cache_key = CACHE_KEY + "_Service";
+
+            CacheService service = null;
+
+            var cache = HttpRuntime.Cache;
+
+            object cacheObject = cache.Get(cache_key);
 
             if (cacheObject != null)
             {
@@ -31,58 +110,35 @@ namespace PageCache
             else
             {
 
-                string configPath = ConfigurationManager.AppSettings["PageCache:Config"] ?? "PageCache.Config";
+                var setting = GetCacheSetting();
 
-                if (configPath.IndexOf("://") == -1)
+                if (setting != null)
                 {
-                    configPath = AppDomain.CurrentDomain.BaseDirectory + configPath;
-                }
-
-                Config.Config config = null;
-                if (Config.ConfigBuilder.TryParseConfig(configPath, out config))
-                {
-                    Setting.Setting setting = new Setting.Setting(config);
-
-                    if (setting != null)
+                    if (setting.Config.Enable)
                     {
-                        if (setting.Config.Enable)
-                        {
-                            service = new CacheService(setting, this);
+                        service = new CacheService(setting, this);
 
-                            if (service != null)
-                            {
-                                if (configPath.IndexOf("://") > 0)
-                                {
-                                    cache.Insert(CACHE_KEY, service);
-                                }
-                                else
-                                {
-                                    cache.Insert(CACHE_KEY, service, new System.Web.Caching.CacheDependency(configPath));
-                                }
-
-                            }
-                        }
+                        cache.Insert(cache_key, service);
                     }
                 }
+
             }
 
+            return service;
+        }
 
-            if (service != null)
+        //初始化设置
+        public bool InitSetting()
+        {
+            this.service = GetCacheService();
+
+            if (this.service != null)
             {
                 return true;
             }
 
             return false;
         }
-
-        /*
-        public void ReSetting()
-        {
-            var cache = HttpRuntime.Cache;
-
-            cache.Remove(CACHE_KEY);
-        }
-        */
 
         //当用户请求时触发
         public void OnBeginRequest(Object source, EventArgs e)
@@ -91,20 +147,16 @@ namespace PageCache
 
             HttpContext context = application.Context;
 
-            /*
-            if (context.Request.RawUrl.IndexOf("xx") >= 0)
-            {
-                ReSetting();
-            }
-            */
-
             try
             {
-                service.Process(context);
+                this.service.Process(context);
             }
             catch (Exception ex)
             {
-                service.ErrorLog.Write(ex.Message);
+                if (this.service.ErrorLog != null)
+                {
+                    this.service.ErrorLog.Write(ex.Message);
+                }
             }
         }
 

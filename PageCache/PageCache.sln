@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Web
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache", "PageCache\PageCache.csproj", "{D2CFFDF0-EA50-4590-934D-7E5C127F4447}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.MongoDB", "PageCache.Store.MongoDB\PageCache.Store.MongoDB.csproj", "{13F0DCAF-1E39-46B4-8F61-6464CC80263D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageCache.Store.MySql", "PageCache.Store.MySql\PageCache.Store.MySql.csproj", "{BC586B3B-6371-41E9-8C79-EA3BDC80DF04}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PageCacheWeb(1)", "http://localhost:1833", "{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PageCacheWeb", "http://localhost:1833", "{AB465EA3-8BDD-4BA4-9F3C-2B8ED3741F02}"
 	ProjectSection(WebsiteProperties) = preProject
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
@@ -60,5 +62,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

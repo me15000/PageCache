@@ -17,7 +17,6 @@ namespace PageCache.Store
     {
 
 
-
         public List<StoreDataEntity> DataList
         {
             get
@@ -286,7 +285,7 @@ namespace PageCache.Store
 
                     }
                 }
-            
+
 
 
             }
@@ -299,6 +298,7 @@ namespace PageCache.Store
 
             isSaving = false;
         }
+
 
 
     }

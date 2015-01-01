@@ -15,3 +15,8 @@ H:\Github\PageCache5\PageCache\PageCache\PageCache\bin\Release\PageCache.dll
 H:\Github\PageCache5\PageCache\PageCache\PageCache\bin\Release\PageCache.pdb
 H:\Github\PageCache5\PageCache\PageCache\PageCache\obj\Release\PageCache.dll
 H:\Github\PageCache5\PageCache\PageCache\PageCache\obj\Release\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache\bin\Release\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache\bin\Release\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache\obj\Release\PageCache.dll
+E:\Github\PageCache\PageCache\PageCache\obj\Release\PageCache.pdb
+E:\Github\PageCache\PageCache\PageCache\obj\Release\PageCache.csprojResolveAssemblyReference.cache
