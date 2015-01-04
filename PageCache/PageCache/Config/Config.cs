@@ -84,6 +84,12 @@ namespace PageCache.Config
                 {
                     config.StoreBufferSize = 100;
                 }
+
+                if (config.CCLevel <= 0)
+                {
+
+                    config.CCLevel = 5;
+                }
             }
 
 
@@ -139,6 +145,12 @@ namespace PageCache.Config
 
         [XmlAttribute("lastReadBufferSize"), DefaultSettingValue("1000")]
         public int LastReadBufferSize { get; set; }
+
+        /// <summary>
+        /// 并发级别
+        /// </summary>
+        [XmlAttribute("cclevel"), DefaultSettingValue("5")]
+        public int CCLevel { get; set; }
 
         #endregion
 

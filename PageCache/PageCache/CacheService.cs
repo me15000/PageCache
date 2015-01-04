@@ -60,9 +60,9 @@ namespace PageCache
 
             //this.memoryDataList = new Store.MemoryDataList(config.MemoryRule.Capacity, config.MemoryRule.ClearSeconds, config.MemoryRule.RemoveSeconds);
 
-            this.lastReadDataList = new Store.LastReadDataList(config.LastReadBufferSize);
+            this.lastReadDataList = new Store.LastReadDataList(config.CCLevel, config.LastReadBufferSize);
 
-            this.storeDataList = new Store.StoreDataList(config.StoreBufferSize);
+            this.storeDataList = new Store.StoreDataList(config.CCLevel, config.StoreBufferSize);
 
             //this.requestQueue = new RequestQueue();
 
@@ -264,7 +264,7 @@ namespace PageCache
 
                     if (data != null && data.BodyData != null)
                     {
-                    
+
 
                         olddata = data;
 
@@ -293,7 +293,7 @@ namespace PageCache
 
                     if (data != null && data.BodyData != null)
                     {
-                      
+
                         olddata = data;
 
                         if (setting.Config.ReadOnly)
@@ -665,7 +665,7 @@ namespace PageCache
                 if (bodyData.Length > CHUNKED_SIZE)
                 {
                     response.BufferOutput = false;
-                    
+
                     try
                     {
                         using (var outputStream = response.OutputStream)

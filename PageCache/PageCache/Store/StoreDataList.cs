@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Web;
@@ -17,35 +17,18 @@ namespace PageCache.Store
     {
 
 
-        public List<StoreDataEntity> DataList
+        public ICollection<StoreDataEntity> DataList
         {
             get
             {
-                var cacheData = GetCacheData();
-                var cacheKeyList = GetCacheKeyList();
+                var datalist = this.datalist;// GetCacheData();
 
-                string[] keys = cacheKeyList.ToArray();
-
-                List<StoreDataEntity> list = new List<StoreDataEntity>(keys.Length);
-
-                for (int i = 0; i < keys.Length; i++)
+                if (datalist == null)
                 {
-                    string key = keys[i];
-
-                    object cacheObject = cacheData[key];
-
-                    if (cacheObject != null)
-                    {
-                        StoreDataEntity entity = cacheObject as StoreDataEntity;
-
-                        if (entity != null)
-                        {
-                            list.Add(entity);
-                        }
-                    }
+                    return null;
                 }
 
-                return list;
+                return datalist.Values;
             }
         }
 
@@ -55,10 +38,43 @@ namespace PageCache.Store
             get { return capacity; }
         }
 
-        public StoreDataList(int capacity)
+        int cclevel = 5;
+        public int CCLevel
         {
-            this.capacity = capacity;
+            get { return cclevel; }
         }
+
+        ConcurrentDictionary<string, StoreDataEntity> datalist;
+
+        public StoreDataList(int cclevel, int capacity)
+        {
+            this.cclevel = cclevel;
+            this.capacity = capacity;
+            this.datalist = new ConcurrentDictionary<string, StoreDataEntity>(this.cclevel, this.capacity);
+        }
+
+        /*
+        const string CACHE_KEY = "PageCache_StoreDataList_DATA";
+        ConcurrentDictionary<string, StoreDataEntity> GetCacheData()
+        {
+            ConcurrentDictionary<string, StoreDataEntity> datalist = null;
+
+            object cacheObject = HttpRuntime.Cache.Get(CACHE_KEY);
+
+            if (cacheObject == null)
+            {
+                datalist = new ConcurrentDictionary<string, StoreDataEntity>(this.cclevel, this.capacity);
+
+                HttpRuntime.Cache.Insert(CACHE_KEY, datalist);
+            }
+            else
+            {
+                datalist = cacheObject as ConcurrentDictionary<string, StoreDataEntity>;
+            }
+            return datalist;
+        }
+
+        */
 
         public StoreData Get(string type, string key)
         {
@@ -67,64 +83,25 @@ namespace PageCache.Store
 
         StoreDataEntity Find(string type, string key)
         {
+
+            var datalist = this.datalist;//GetCacheData();
+
+            if (datalist == null)
+            {
+                return null;
+            }
+
+
             string dk = GetDataKey(type, key);
 
-            var cacheData = GetCacheData();
-
-            object cacheObject = cacheData[dk];
-
-            if (cacheObject != null)
+            StoreDataEntity cacheData;
+            if (datalist.TryGetValue(dk, out cacheData))
             {
-                return cacheObject as StoreDataEntity;
+                return cacheData;
             }
 
             return null;
         }
-
-
-        const string CACHE_KEY_LIST_KEY = "StoreDataList_KEY_LIST";
-        List<string> GetCacheKeyList()
-        {
-            List<string> datalist = null;
-
-            object cacheObject = HttpRuntime.Cache.Get(CACHE_KEY_LIST_KEY);
-
-            if (cacheObject == null)
-            {
-                datalist = new List<string>(this.capacity);
-
-                HttpRuntime.Cache.Insert(CACHE_KEY_LIST_KEY, datalist);
-            }
-            else
-            {
-                datalist = cacheObject as List<string>;
-            }
-
-            return datalist;
-        }
-
-
-        const string CACHE_DATA_KEY = "StoreDataList_DATA";
-        Hashtable GetCacheData()
-        {
-            Hashtable datalist = null;
-
-            object cacheObject = HttpRuntime.Cache.Get(CACHE_DATA_KEY);
-
-            if (cacheObject == null)
-            {
-                datalist = new Hashtable(this.capacity);
-
-                HttpRuntime.Cache.Insert(CACHE_DATA_KEY, datalist);
-            }
-            else
-            {
-                datalist = cacheObject as Hashtable;
-            }
-
-            return datalist;
-        }
-
 
         string GetDataKey(string type, string key)
         {
@@ -132,16 +109,12 @@ namespace PageCache.Store
         }
 
 
-
-        bool isSaving = false;
-
         public void Add(IStore store, StoreData data)
         {
 
-            var cacheData = GetCacheData();
-            var cacheKeyList = GetCacheKeyList();
+            var datalist = this.datalist;//GetCacheData();
 
-            if (cacheData == null || cacheKeyList == null)
+            if (datalist == null)
             {
                 return;
             }
@@ -165,31 +138,20 @@ namespace PageCache.Store
                 Store = store
                 ,
                 Type = data.Type
-
             };
-
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            lock (this)
-            {
-                cacheKeyList.Remove(dk);
-            }
+            datalist.AddOrUpdate(dk, entity, null);
 
-            cacheData[dk] = entity;
-
-            cacheKeyList.Add(dk);
-
-
-
-            if (cacheData.Count >= capacity)
+            if (datalist.Count >= this.capacity)
             {
                 ThreadPool.QueueUserWorkItem(SaveAsync, null);
-                //SaveAsync(null);
             }
         }
 
 
+        bool isSaving = false;
 
 
         void SaveAsync(object o)
@@ -199,95 +161,43 @@ namespace PageCache.Store
                 return;
             }
 
-            var cacheData = GetCacheData();
-            var cacheKeyList = GetCacheKeyList();
+            var datalist = this.datalist;//GetCacheData();
 
-
-            if (cacheData == null || cacheKeyList == null)
+            if (datalist == null)
             {
                 return;
             }
 
 
-            isSaving = true;
 
+            isSaving = true;
 
             DateTime now = DateTime.Now;
 
-
             try
             {
+                StoreDataEntity cacheData;
 
-                //cacheKeyList 有多余
-                if (cacheKeyList.Count > this.capacity)
+                var array = datalist.ToArray();
+
+                foreach (var kv in array)
                 {
-                    var array = cacheKeyList.ToArray();
-                    int removeCount = array.Length - this.capacity;
-                    //清理掉多余的
-                    if (removeCount > 0)
+                    var entity = kv.Value;
+                    if (entity != null)
                     {
-                        for (int i = 0; i < removeCount; i++)
+                        if (entity.ExpiresAbsolute > now)
                         {
-                            string key = array[i];
-
-                            cacheData.Remove(key);
-                            cacheKeyList.Remove(key);
-                        }
-                    }
-                }
-
-                //cacheData 有多余
-                if (cacheData.Count > this.capacity)
-                {
-                    foreach (object key in cacheData.Keys)
-                    {
-                        string k = key.ToString();
-
-                        if (!cacheKeyList.Contains(k))
-                        {
-                            cacheData.Remove(key);
-                        }
-                    }
-                }
-
-
-
-
-                //存储
-                if (true)
-                {
-                    string[] keys = cacheKeyList.ToArray();
-
-
-                    for (int i = 0; i < keys.Length; i++)
-                    {
-                        string key = keys[i];
-
-                        object cacheObject = cacheData[key];
-
-                        if (cacheObject != null)
-                        {
-                            StoreDataEntity entity = cacheObject as StoreDataEntity;
-                            if (entity != null)
+                            if (entity.Store != null)
                             {
-                                if (entity.ExpiresAbsolute > now)
-                                {
-                                    if (entity.Store != null)
-                                    {
-                                        entity.Store.Save(entity);
-                                    }
-                                }
+                                entity.Store.Save(entity);
                             }
                         }
-
-                        cacheData.Remove(key);
-                        cacheKeyList.Remove(key);
-
                     }
+
+                    string dk = GetDataKey(entity.Type, entity.Key);
+
+                    datalist.TryRemove(dk, out cacheData);
                 }
-
-
-
             }
             catch (Exception ex)
             {
