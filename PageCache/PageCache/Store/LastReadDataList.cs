@@ -57,7 +57,7 @@ namespace PageCache.Store
             this.cclevel = cclevel;
             this.capacity = capacity;
 
-            this.datalist = new ConcurrentDictionary<string, StoreData>(this.cclevel, this.capacity);
+            this.datalist = new ConcurrentDictionary<string, StoreData>(this.cclevel, this.capacity * 2);
             this.keylist = new ConcurrentQueue<string>();
         }
 
@@ -132,7 +132,7 @@ namespace PageCache.Store
 
             datalist.TryRemove(dk, out cacheData);
 
-            
+
         }
 
 

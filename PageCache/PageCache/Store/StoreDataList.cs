@@ -49,7 +49,7 @@ namespace PageCache.Store
         {
             this.cclevel = cclevel;
             this.capacity = capacity;
-            this.datalist = new ConcurrentDictionary<string, StoreDataEntity>(this.cclevel, this.capacity);
+            this.datalist = new ConcurrentDictionary<string, StoreDataEntity>(this.cclevel, this.capacity * 2);
         }
 
         /*
