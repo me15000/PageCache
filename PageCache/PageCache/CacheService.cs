@@ -104,8 +104,6 @@ namespace PageCache
 
             if (true)
             {
-
-
                 var datalist = creatingKeyList;
 
                 context.Response.Write("[creatingKeyList,Count:" + datalist.Count + "]:\r\n");
@@ -114,9 +112,6 @@ namespace PageCache
                 {
                     context.Response.Write(item + "\r\n");
                 }
-
-
-
             }
 
             /*
@@ -132,19 +127,33 @@ namespace PageCache
 
                     context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
                 }
-            }*/
+            }
+            */
+
+
+
+
 
             if (type.IndexOf("all") >= 0 || type.IndexOf("last") >= 0)
             {
-                var datalist = lastReadDataList.DataList;
 
+                var keylist = lastReadDataList.KeyList;
+
+                context.Response.Write("[lastReadKeyList,Count:" + keylist.Count + ",Capacity:" + lastReadDataList.Capacity + "]:\r\n");
+
+                foreach (var item in keylist)
+                {
+                    context.Response.Write("key:" + item + "\r\n");
+                }
+
+
+                var datalist = lastReadDataList.DataList;
                 context.Response.Write("[lastReadDataList,Count:" + datalist.Count + ",Capacity:" + lastReadDataList.Capacity + "]:\r\n");
 
                 foreach (var item in datalist)
                 {
                     context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
                 }
-
             }
 
             if (type.IndexOf("all") >= 0 || type.IndexOf("store") >= 0)
@@ -157,9 +166,7 @@ namespace PageCache
                 {
                     context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
                 }
-
             }
-
 
             context.ApplicationInstance.CompleteRequest();
         }

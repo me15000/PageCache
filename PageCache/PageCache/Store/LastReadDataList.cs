@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -23,6 +24,17 @@ namespace PageCache.Store
         }
 
 
+        public ICollection KeyList
+        {
+            get
+            {
+                return this.keylist; //GetCacheData();
+            }
+        }
+
+
+
+
         int capacity = 10;
         public int Capacity
         {
@@ -34,15 +46,19 @@ namespace PageCache.Store
         {
             get { return cclevel; }
         }
-        
+
 
         ConcurrentDictionary<string, StoreData> datalist;
+
+        ConcurrentQueue<string> keylist;
+
         public LastReadDataList(int cclevel, int capacity)
         {
             this.cclevel = cclevel;
             this.capacity = capacity;
 
             this.datalist = new ConcurrentDictionary<string, StoreData>(this.cclevel, this.capacity);
+            this.keylist = new ConcurrentQueue<string>();
         }
 
         /*
@@ -115,6 +131,8 @@ namespace PageCache.Store
             StoreData cacheData;
 
             datalist.TryRemove(dk, out cacheData);
+
+            
         }
 
 
@@ -131,14 +149,19 @@ namespace PageCache.Store
             string dk = GetDataKey(data.Type, data.Key);
 
 
+            if (!datalist.ContainsKey(dk))
+            {
+                keylist.Enqueue(dk);
+            }
+
+
             datalist.AddOrUpdate(dk, data, (string k, StoreData oldData) =>
             {
                 return data;
             });
 
-            if (datalist.Count >= this.capacity)
+            if (datalist.Count >= this.capacity * 2)
             {
-
                 ThreadPool.QueueUserWorkItem(ClearAsync, null);
             }
         }
@@ -164,7 +187,7 @@ namespace PageCache.Store
 
             try
             {
-                int removeCount = datalist.Count - this.capacity;
+                int removeCount = keylist.Count - this.capacity;
 
                 if (removeCount > 0)
                 {
@@ -172,12 +195,15 @@ namespace PageCache.Store
 
                     for (int i = 0; i < removeCount; i++)
                     {
-                        var enu = datalist.Keys.GetEnumerator();
+                        string key = null;
 
-                        if (enu != null)
+                        keylist.TryDequeue(out key);
+
+                        if (key != null)
                         {
-                            datalist.TryRemove(enu.Current, out cacheData);
+                            datalist.TryRemove(key, out cacheData);
                         }
+
                     }
                 }
             }
