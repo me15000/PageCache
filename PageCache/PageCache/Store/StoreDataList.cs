@@ -187,6 +187,7 @@ namespace PageCache.Store
                 foreach (var kv in array)
                 {
                     var entity = kv.Value;
+
                     if (entity != null)
                     {
                         if (entity.ExpiresAbsolute > now)
@@ -198,9 +199,8 @@ namespace PageCache.Store
                         }
                     }
 
-                    string dk = GetDataKey(entity.Type, entity.Key);
+                    datalist.TryRemove(kv.Key, out cacheData);
 
-                    datalist.TryRemove(dk, out cacheData);
                 }
             }
             catch (Exception ex)
