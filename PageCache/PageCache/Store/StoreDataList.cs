@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Web;
 
 namespace PageCache.Store
 {
@@ -142,7 +141,12 @@ namespace PageCache.Store
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            datalist.AddOrUpdate(dk, entity, null);
+
+            datalist.AddOrUpdate(dk, entity, (string k, StoreDataEntity oldData) =>
+            {
+                return entity;
+            });
+
 
             if (datalist.Count >= this.capacity)
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -43,6 +42,10 @@ namespace PageCache
 
         Config.Config config = null;
 
+
+        List<string> creatingKeyList = null;
+
+
         #endregion
 
         /// <summary>
@@ -63,6 +66,8 @@ namespace PageCache
             this.lastReadDataList = new Store.LastReadDataList(config.CCLevel, config.LastReadBufferSize);
 
             this.storeDataList = new Store.StoreDataList(config.CCLevel, config.StoreBufferSize);
+
+            this.creatingKeyList = new List<string>(config.CCLevel);
 
             //this.requestQueue = new RequestQueue();
 
@@ -100,16 +105,18 @@ namespace PageCache
             if (true)
             {
 
-                string[] array = creatingKeyList.ToArray();
 
-                context.Response.Write("[creatingKeyList,Count:" + array.Length + "]:\r\n");
+                var datalist = creatingKeyList;
 
+                context.Response.Write("[creatingKeyList,Count:" + datalist.Count + "]:\r\n");
 
-                for (int i = 0; i < array.Length; i++)
+                foreach (var item in datalist)
                 {
-                    context.Response.Write(array[i] + "\r\n");
-
+                    context.Response.Write(item + "\r\n");
                 }
+
+
+
             }
 
             /*
@@ -376,7 +383,6 @@ namespace PageCache
         }
 
 
-        List<string> creatingKeyList = new List<string>(100);
 
         string GetCreatingKey(RequestInfo info)
         {
@@ -575,11 +581,8 @@ namespace PageCache
             Store.StoreData storeData = null;
             string creatingKey = GetCreatingKey(info);
 
-            lock (this)
-            {
-                creatingKeyList.Remove(creatingKey);
-            }
 
+            creatingKeyList.Remove(creatingKey);
             creatingKeyList.Add(creatingKey);
 
             byte[] rheadersData = GetRequestHeadersData(info);
@@ -604,10 +607,9 @@ namespace PageCache
 
             }
 
-            lock (this)
-            {
-                creatingKeyList.Remove(creatingKey);
-            }
+            creatingKeyList.Remove(creatingKey);
+
+
 
             return storeData;
         }

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Web;
 
 namespace PageCache.Store
 {
@@ -35,7 +34,7 @@ namespace PageCache.Store
         {
             get { return cclevel; }
         }
-
+        
 
         ConcurrentDictionary<string, StoreData> datalist;
         public LastReadDataList(int cclevel, int capacity)
@@ -119,6 +118,7 @@ namespace PageCache.Store
         }
 
 
+
         public void Add(StoreData data)
         {
             var datalist = this.datalist;//GetCacheData();
@@ -130,10 +130,15 @@ namespace PageCache.Store
 
             string dk = GetDataKey(data.Type, data.Key);
 
-            datalist.AddOrUpdate(dk, data, null);
+
+            datalist.AddOrUpdate(dk, data, (string k, StoreData oldData) =>
+            {
+                return data;
+            });
 
             if (datalist.Count >= this.capacity)
             {
+
                 ThreadPool.QueueUserWorkItem(ClearAsync, null);
             }
         }
