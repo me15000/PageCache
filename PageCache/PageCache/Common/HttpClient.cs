@@ -91,11 +91,12 @@ namespace PageCache.Common
         public byte[] ReceiveBodyData(Socket socket, int contentLength)
         {
 
+            int nowContentLength = 0;
+
             byte[] data = new byte[contentLength];
 
             if (contentLength > 0)
             {
-                int nowContentLength = 0;
 
                 try
                 {
@@ -107,6 +108,7 @@ namespace PageCache.Common
 
                         if (receiveCount > 0)
                         {
+
                             Array.Copy(buffer, 0, data, nowContentLength, receiveCount);
 
                             nowContentLength += receiveCount;
@@ -123,7 +125,12 @@ namespace PageCache.Common
                 }
             }
 
-            return data;
+            if (nowContentLength == contentLength)
+            {
+                return data;
+            }
+
+            return null;
         }
 
 
@@ -166,7 +173,15 @@ namespace PageCache.Common
             {
             }
 
-            return list.ToArray();
+            if (nowContentLength > 0)
+            {
+                return list.ToArray();
+            }
+            else
+            {
+                return null;
+            }
+
         }
 
         const string CHUNKED_END_SIGN = "\r\n";
@@ -332,11 +347,15 @@ namespace PageCache.Common
                 };
 
 
-
-
                 if (info.ContentLength > 0)
                 {
                     data.BodyData = ReceiveBodyData(socket, info.ContentLength);
+
+                    if (data.BodyData == null)
+                    {
+                        throw new Exception("ContentLength>0 and ReceiveBodyData is null");
+                    }
+
                 }
                 else if (info.ContentLength == NONE_DATA_LENGTH)
                 {
@@ -345,14 +364,21 @@ namespace PageCache.Common
                     if (tran.Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
                     {
                         byte[] receiveData = ReceiveBodyData(socket);
-                        data.BodyData = ParseChunkedData(receiveData);
+
+                        if (receiveData != null)
+                        {
+                            data.BodyData = ParseChunkedData(receiveData);
+                        }
+                        else
+                        {
+                            throw new Exception("Transfer-Encoding is " + TRANSFER_ENCODING + " and ReceiveBodyData is null");
+                        }
                     }
                     else
                     {
                         data.BodyData = ReceiveBodyData(socket);
                     }
                 }
-
 
                 if (data.BodyData != null)
                 {
@@ -431,26 +457,31 @@ namespace PageCache.Common
                 }
 
                 socket.Send(headersData);
+
                 data = GetData(socket);
-
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Disconnect(true);
-
             }
             catch (Exception ex)
             {
-                if (socket.Connected)
+                try
                 {
-                    socket.Close();
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Disconnect(true);
                 }
-                socket.Dispose();
+                catch (Exception e)
+                {
+                    if (socket.Connected)
+                    {
+                        socket.Close();
+                    }
+
+                    socket.Dispose();
+                }
+               
 
                 if (times < loopTimes)
                 {
                     //Thread.Sleep(200);
                     System.Threading.Thread.CurrentThread.Join(200);
-
-
                     goto loop;
                 }
             }
@@ -491,6 +522,7 @@ namespace PageCache.Common
                 }
 
                 socket.Send(headersData);
+
                 data = GetData(socket);
 
                 socket.Shutdown(SocketShutdown.Both);
@@ -499,12 +531,21 @@ namespace PageCache.Common
             }
             catch (Exception ex)
             {
-                if (socket.Connected)
+                try
                 {
-                    socket.Close();
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Disconnect(true);
                 }
+                catch (Exception e)
+                {
 
-                socket.Dispose();
+                    if (socket.Connected)
+                    {
+                        socket.Close();
+                    }
+
+                    socket.Dispose();
+                }
 
                 if (times < loopTimes)
                 {

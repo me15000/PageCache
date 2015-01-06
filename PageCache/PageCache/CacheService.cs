@@ -276,27 +276,30 @@ namespace PageCache
                 {
                     Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null)
+                    if (data != null)
                     {
 
-
-                        olddata = data;
-
-                        if (setting.Config.ReadOnly)
+                        if (data.BodyData != null)
                         {
-                            if (EchoData(info.Context, data))
+                            olddata = data;
+
+                            if (setting.Config.ReadOnly)
                             {
-                                return true;
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
+                            }
+
+                            if (data.ExpiresAbsolute > DateTime.Now)
+                            {
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
                             }
                         }
 
-                        if (data.ExpiresAbsolute > DateTime.Now)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
                     }
                 }
 
@@ -305,26 +308,29 @@ namespace PageCache
                 {
                     Store.StoreData data = storeDataList.Get(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null)
+                    if (data != null)
                     {
-
-                        olddata = data;
-
-                        if (setting.Config.ReadOnly)
+                        if (data.BodyData != null)
                         {
-                            if (EchoData(info.Context, data))
+                            olddata = data;
+
+                            if (setting.Config.ReadOnly)
                             {
-                                return true;
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
+                            }
+
+                            if (data.ExpiresAbsolute > DateTime.Now)
+                            {
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
                             }
                         }
 
-                        if (data.ExpiresAbsolute > DateTime.Now)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
                     }
                 }
 
@@ -335,42 +341,45 @@ namespace PageCache
                 {
                     Store.StoreData data = info.Store.GetData(info.Type, info.Key);
 
-                    if (data != null && data.BodyData != null)
+                    if (data != null)
                     {
 
-
-                        olddata = data;
-
-
-                        lastReadDataList.Add(data);
-                        //如果启用了内存并且达到并发数量时,使用内存缓存
-                        /*
-                        if (info.Rule.ConfigRule.MemoryEnable)
+                        if (data.BodyData != null)
                         {
-                            int n = requestQueue.GetCount(info);
+                            olddata = data;
 
-                            if (n >= setting.Config.MemoryRule.QueueCount)
+
+                            lastReadDataList.Add(data);
+                            //如果启用了内存并且达到并发数量时,使用内存缓存
+                            /*
+                            if (info.Rule.ConfigRule.MemoryEnable)
                             {
-                                memoryDataList.Add(data);
+                                int n = requestQueue.GetCount(info);
+
+                                if (n >= setting.Config.MemoryRule.QueueCount)
+                                {
+                                    memoryDataList.Add(data);
+                                }
+                            }
+                            */
+
+                            if (setting.Config.ReadOnly)
+                            {
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
+                            }
+
+                            if (data.ExpiresAbsolute > DateTime.Now)
+                            {
+                                if (EchoData(info.Context, data))
+                                {
+                                    return true;
+                                }
                             }
                         }
-                        */
 
-                        if (setting.Config.ReadOnly)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
-
-                        if (data.ExpiresAbsolute > DateTime.Now)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
                     }
                 }
             }
@@ -452,12 +461,16 @@ namespace PageCache
             }
 
             //上述步骤执行失败，输出老缓存
-            if (olddata != null && olddata.BodyData != null)
+            if (olddata != null)
             {
-                if (EchoData(info.Context, olddata))
+                if (olddata.BodyData != null)
                 {
-                    return true;
+                    if (EchoData(info.Context, olddata))
+                    {
+                        return true;
+                    }
                 }
+
             }
 
 
@@ -553,29 +566,33 @@ namespace PageCache
         {
             outdata = CreateData(info);
 
-            if (outdata != null && outdata.HeadersData != null)
+            if (outdata != null)
             {
 
-                //存入store
-                if (outdata.Seconds > 0 && outdata.HeadersData.Length >= 0)
+                if (outdata.HeadersData != null)
                 {
-                    storeDataList.Add(info.Store, outdata);
-                }
-
-                //存入 lastRead
-                lastReadDataList.Add(outdata);
-
-                //存入 memory
-                /*
-                if (info.Rule.ConfigRule.MemoryEnable)
-                {
-                    if (memoryDataList.Get(info.Type, info.Key) != null)
+                    //存入store
+                    if (outdata.Seconds > 0 && outdata.HeadersData.Length >= 0)
                     {
-                        memoryDataList.Add(outdata);
+                        storeDataList.Add(info.Store, outdata);
                     }
+
+                    //存入 lastRead
+                    lastReadDataList.Add(outdata);
+
+                    //存入 memory
+                    /*
+                    if (info.Rule.ConfigRule.MemoryEnable)
+                    {
+                        if (memoryDataList.Get(info.Type, info.Key) != null)
+                        {
+                            memoryDataList.Add(outdata);
+                        }
+                    }
+                    */
+                    return true;
                 }
-                */
-                return true;
+
             }
 
 
@@ -586,6 +603,7 @@ namespace PageCache
         Store.StoreData CreateData(RequestInfo info)
         {
             Store.StoreData storeData = null;
+
             string creatingKey = GetCreatingKey(info);
 
 
@@ -602,9 +620,12 @@ namespace PageCache
                 if (httpdata != null)
                 {
                     var data = ConvertHttpDataToStoreData(info, httpdata);
-                    if (data != null && data.HeadersData != null)
+                    if (data != null)
                     {
-                        storeData = data;
+                        if (data.HeadersData != null)
+                        {
+                            storeData = data;
+                        }
                     }
                 }
 
@@ -615,8 +636,6 @@ namespace PageCache
             }
 
             creatingKeyList.Remove(creatingKey);
-
-
 
             return storeData;
         }
