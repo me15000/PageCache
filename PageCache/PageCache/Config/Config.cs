@@ -115,7 +115,8 @@ namespace PageCache.Config
         [XmlAttribute("typePrefix")]
         public string TypePrefix { get; set; }
 
-
+        [XmlAttribute("hashHostName"), DefaultSettingValue("false")]
+        public bool HashHostName { get; set; }
 
         [XmlAttribute("refreshKey")]
         public string RefreshKey { get; set; }

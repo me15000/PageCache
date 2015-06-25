@@ -1,0 +1,4 @@
+G:\gitosc\PageCache\PageCache\PageCache\bin\Debug\PageCache.dll
+G:\gitosc\PageCache\PageCache\PageCache\bin\Debug\PageCache.pdb
+G:\gitosc\PageCache\PageCache\PageCache\obj\Debug\PageCache.dll
+G:\gitosc\PageCache\PageCache\PageCache\obj\Debug\PageCache.pdb

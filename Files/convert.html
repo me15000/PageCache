@@ -1,0 +1,47 @@
+<html>
+<body>
+<div>
+<textarea id="areain" style="width:640px; height:480px;" onblur="convert()"></textarea>
+</div>
+
+<div>
+<textarea id="areaout" style="width:640px; height:480px;"></textarea>
+</div>
+
+<script>
+function convert() {
+	var inval = document.getElementById('areain').value;
+
+	var mreg = /match\s*\=\s*"([^"]+)"/img;
+	var areg = /action\s*\=\s*"([^"]+)"/img;
+	var arr = [];
+	var n = 0;
+	while (true) {
+		var m = mreg.exec(inval);
+		var a = areg.exec(inval);
+
+		if (n > 1000) {
+
+			break;
+		}
+
+		if (m && a && m.length && a.length) {
+			var vm = m[1].replace('^/', '^');
+			var va = a[1];
+
+			arr.push('<rule name="zt' + (n++) + '" stopProcessing="true">\n');
+			arr.push('<match url="' + vm + '" />\n');
+			arr.push('<action type="Rewrite" url="' + va + '" />\n');
+			arr.push('</rule>\n\n');
+
+		} else {
+			break;
+		}
+	}
+	
+	document.getElementById('areaout').value = arr.join(' ');
+}
+</script >
+
+</body>
+</html>

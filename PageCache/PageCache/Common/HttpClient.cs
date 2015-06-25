@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 
 namespace PageCache.Common
 {
@@ -43,11 +42,20 @@ namespace PageCache.Common
     public class HttpClient
     {
 
+        public enum HTTPMethod
+        {
+            GET,
+            POST,
+            HEAD
+        };
+
         const string CONTENT_LENGTH_HEADER = "Content-Length";
         const int HEADER_RECEIVE_SIZE = 1;
         const string HEADER_END_SIGN = "\r\n\r\n";
         const string HEADER_SINGLE_END_SIGN = "\r\n";
         const int NONE_DATA_LENGTH = -1;
+
+        const int Receive_Buffer_Size = 1024 * 8;
 
         const string TRANSFER_ENCODING = "chunked";
 
@@ -97,6 +105,8 @@ namespace PageCache.Common
 
             if (contentLength > 0)
             {
+                int zero_times = 0;
+                int zero_max = 3;
 
                 try
                 {
@@ -108,79 +118,100 @@ namespace PageCache.Common
 
                         if (receiveCount > 0)
                         {
+                            zero_times = 0;
 
                             Array.Copy(buffer, 0, data, nowContentLength, receiveCount);
 
                             nowContentLength += receiveCount;
                         }
 
-                        if (receiveCount == 0)
+                        if (nowContentLength >= contentLength)
                         {
                             break;
+                        }
+                        else
+                        {
+                            if (receiveCount == 0)
+                            {
+                                zero_times++;
+                                if (zero_times >= zero_max)
+                                {
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
+                    throw new Exception("ReceiveBodyData : " + ex.Message);
                 }
             }
 
-            if (nowContentLength == contentLength)
+            if (nowContentLength == contentLength && nowContentLength >= 0)
             {
                 return data;
             }
-
-            return null;
+            else
+            {
+                throw new Exception("ReceiveBodyData : faild ");
+            }
         }
 
 
         public byte[] ReceiveBodyData(Socket socket)
         {
-            List<byte> list = new List<byte>();
 
             int nowContentLength = 0;
 
-            try
+            int zero_times = 0;
+            int zero_max = 3;
+
+            byte[] data = null;
+
+            List<byte> list = new List<byte>();
+
+
+            while (true)
             {
 
-                while (true)
+
+                byte[] buffer = new byte[BUFFER_SIZE];
+
+
+                int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
+
+
+                if (receiveCount > 0)
                 {
-                    byte[] buffer = new byte[BUFFER_SIZE];
+                    zero_times = 0;
 
-
-                    int receiveCount = socket.Receive(buffer, BUFFER_SIZE, SocketFlags.None);
-
-
-                    if (receiveCount > 0)
+                    for (int i = 0; i < receiveCount; i++)
                     {
-
-                        for (int i = 0; i < receiveCount; i++)
-                        {
-                            list.Add(buffer[i]);
-                        }
-
-                        nowContentLength += receiveCount;
+                        list.Add(buffer[i]);
                     }
 
-                    if (receiveCount == 0)
+                    nowContentLength += receiveCount;
+                }
+
+
+                if (receiveCount == 0)
+                {
+                    zero_times++;
+                    if (zero_times >= zero_max)
                     {
                         break;
                     }
                 }
-
-            }
-            catch (Exception ex)
-            {
             }
 
             if (nowContentLength > 0)
             {
-                return list.ToArray();
+                data = list.ToArray();
             }
-            else
-            {
-                return null;
-            }
+
+
+            return data;
 
         }
 
@@ -192,54 +223,50 @@ namespace PageCache.Common
 
             List<byte> list = new List<byte>();
 
-            try
+
+            using (MemoryStream stream = new MemoryStream(data))
             {
-                using (MemoryStream stream = new MemoryStream(data))
+                using (BinaryReader reader = new BinaryReader(stream))
                 {
-                    using (BinaryReader reader = new BinaryReader(stream))
+                    StringBuilder line = new StringBuilder();
+
+                    while (stream.Position < endPosition)
                     {
-                        StringBuilder line = new StringBuilder();
+                        line.Append(reader.ReadChar());
 
-                        while (stream.Position < endPosition)
+                        string lineString = line.ToString();
+
+                        int inx = lineString.IndexOf(CHUNKED_END_SIGN);
+
+                        if (inx > 0)
                         {
-                            line.Append(reader.ReadChar());
+                            int count = Convert.ToInt32(lineString.Substring(0, inx), 16);
 
-                            string lineString = line.ToString();
-
-                            int inx = lineString.IndexOf(CHUNKED_END_SIGN);
-
-                            if (inx > 0)
+                            if (count > 0)
                             {
-                                int count = Convert.ToInt32(lineString.Substring(0, inx), 16);
-
-                                if (count > 0)
+                                byte[] bytes = reader.ReadBytes(count);
+                                if (bytes != null)
                                 {
-                                    byte[] bytes = reader.ReadBytes(count);
-                                    if (bytes != null)
-                                    {
-                                        list.AddRange(bytes);
-                                    }
+                                    list.AddRange(bytes);
                                 }
+                            }
 
-                                line.Clear();
-                            }
-                            else if (inx == 0)
-                            {
-                                break;
-                            }
+                            line.Clear();
                         }
-
-                        reader.Close();
-                        reader.Dispose();
+                        else if (inx == 0)
+                        {
+                            break;
+                        }
                     }
 
-                    stream.Close();
-                    stream.Dispose();
+                    reader.Close();
+                    reader.Dispose();
                 }
+
+                stream.Close();
+                stream.Dispose();
             }
-            catch (Exception ex)
-            {
-            }
+
 
             return list.ToArray();
         }
@@ -322,7 +349,7 @@ namespace PageCache.Common
             return null;
         }
 
-        public HttpData GetData(Socket socket)
+        public HttpData GetData(HTTPMethod metohd, Socket socket)
         {
             string headerString = ReceiveHeaderString(socket);
 
@@ -346,37 +373,39 @@ namespace PageCache.Common
                     Headers = info.Headers
                 };
 
-
-                if (info.ContentLength > 0)
+                if (metohd == HTTPMethod.GET || metohd == HTTPMethod.POST)
                 {
-                    data.BodyData = ReceiveBodyData(socket, info.ContentLength);
-
-                    if (data.BodyData == null)
+                    if (info.ContentLength > 0)
                     {
-                        throw new Exception("ContentLength>0 and ReceiveBodyData is null");
-                    }
+                        data.BodyData = ReceiveBodyData(socket, info.ContentLength);
 
-                }
-                else if (info.ContentLength == NONE_DATA_LENGTH)
-                {
-                    string tran = info.Headers["Transfer-Encoding"] ?? string.Empty;
-
-                    if (tran.Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
-                    {
-                        byte[] receiveData = ReceiveBodyData(socket);
-
-                        if (receiveData != null)
+                        if (data.BodyData == null)
                         {
-                            data.BodyData = ParseChunkedData(receiveData);
+                            throw new Exception("ContentLength>0 and ReceiveBodyData is null");
+                        }
+
+                    }
+                    else if (info.ContentLength == NONE_DATA_LENGTH)
+                    {
+                        string tran = info.Headers["Transfer-Encoding"] ?? string.Empty;
+
+                        if (tran.Equals(TRANSFER_ENCODING, StringComparison.OrdinalIgnoreCase))
+                        {
+                            byte[] receiveData = ReceiveBodyData(socket);
+
+                            if (receiveData != null)
+                            {
+                                data.BodyData = ParseChunkedData(receiveData);
+                            }
+                            else
+                            {
+                                throw new Exception("Transfer-Encoding is " + TRANSFER_ENCODING + " and ReceiveBodyData is null");
+                            }
                         }
                         else
                         {
-                            throw new Exception("Transfer-Encoding is " + TRANSFER_ENCODING + " and ReceiveBodyData is null");
+                            data.BodyData = ReceiveBodyData(socket);
                         }
-                    }
-                    else
-                    {
-                        data.BodyData = ReceiveBodyData(socket);
                     }
                 }
 
@@ -395,10 +424,10 @@ namespace PageCache.Common
 
         }
 
-        int receiveTimeout = 5000;
+        int receiveTimeout = 30000;
 
         /// <summary>
-        /// 接收超时默认10秒
+        /// 接收超时默认2秒
         /// </summary>
         public int ReceiveTimeout
         {
@@ -406,10 +435,10 @@ namespace PageCache.Common
             set { receiveTimeout = value; }
         }
 
-        int sendTimeout = 5000;
+        int sendTimeout = 30000;
 
         /// <summary>
-        /// 发送超时默认3秒
+        /// 发送超时默认1秒
         /// </summary>
         public int SendTimeout
         {
@@ -417,148 +446,149 @@ namespace PageCache.Common
             set { sendTimeout = value; }
         }
 
-        public HttpData GetData(string host, byte[] headersData)
+        public HttpData GetData(HTTPMethod metohd, string host, byte[] headersData)
         {
-            return GetData(host, 80, headersData);
+            return GetData(metohd, host, 80, headersData);
         }
 
         public Log ErrorLog { get; set; }
 
 
 
-
-        public HttpData GetData(string host, int port, byte[] headersData)
+        public HttpData GetData(HTTPMethod metohd, string host, int port, byte[] headersData)
         {
             HttpData data = null;
 
-            int times = 0;
-            int loopTimes = 2;
-
-        loop:
-
-            times++;
-
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendTimeout);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, receiveTimeout);
-
-            socket.ReceiveTimeout = receiveTimeout;
-            socket.SendTimeout = sendTimeout;
-
-            try
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
-                if (!socket.Connected)
-                {
-                    socket.Connect(host, port);
-                }
+                socket.ReceiveBufferSize = Receive_Buffer_Size;
+                socket.ReceiveTimeout = receiveTimeout;
+                socket.SendTimeout = sendTimeout;
 
-                socket.Send(headersData);
 
-                data = GetData(socket);
-            }
-            catch (Exception ex)
-            {
+                int loopTimes = 0;
+                int loopTimesMax = 2;
+
+            loop:
+
                 try
                 {
-                    socket.Shutdown(SocketShutdown.Both);
-                    socket.Disconnect(true);
-                }
-                catch (Exception e)
-                {
-                    if (socket.Connected)
+                    if (!socket.Connected)
                     {
-                        socket.Close();
+                        socket.Connect(host, port);
                     }
 
-                    socket.Dispose();
-                }
-               
+                    if (!socket.Connected)
+                    {
+                        loopTimes++;
 
-                if (times < loopTimes)
+                        if (loopTimes < loopTimesMax)
+                        {
+                            goto loop;
+                        }
+                    }
+
+                    if (socket.Connected)
+                    {
+                        socket.Send(headersData);
+                        data = GetData(metohd, socket);
+                        socket.Shutdown(SocketShutdown.Both);
+                    }
+
+                }
+                catch (Exception ex)
                 {
-                    //Thread.Sleep(200);
-                    System.Threading.Thread.CurrentThread.Join(200);
-                    goto loop;
-                }
-            }
+                    if (loopTimes < loopTimesMax)
+                    {
+                        loopTimes++;
 
-            //socket.Close();
-            //socket.Dispose();
+                        goto loop;
+                    }
+                    else
+                    {
+                        if (ErrorLog != null)
+                        {
+                            ErrorLog.Write(" Socket GetData " + ex.Message + "\r\n----------\r\n" + Encoding.UTF8.GetString(headersData));
+                        }
+                    }
+                }
+
+
+                socket.Close();
+                socket.Dispose();
+
+            }
 
             return data;
         }
 
-        public HttpData GetData(IPEndPoint address, byte[] headersData)
+
+
+
+        public HttpData GetData(HTTPMethod metohd, IPEndPoint address, byte[] headersData)
         {
             HttpData data = null;
 
-            int times = 0;
-            int loopTimes = 2;
-
-        loop:
-
-            times++;
-
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendTimeout);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, receiveTimeout);
-
-            socket.ReceiveTimeout = receiveTimeout;
-            socket.SendTimeout = sendTimeout;
-
-            try
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
-                if (!socket.Connected)
-                {
-                    socket.Connect(address.Address, address.Port);
-                }
+                socket.ReceiveBufferSize = Receive_Buffer_Size;
 
-                socket.Send(headersData);
+                socket.ReceiveTimeout = receiveTimeout;
+                socket.SendTimeout = sendTimeout;
 
-                data = GetData(socket);
+                int loopTimes = 0;
+                int loopTimesMax = 2;
 
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Disconnect(true);
+            loop:
 
-            }
-            catch (Exception ex)
-            {
                 try
                 {
-                    socket.Shutdown(SocketShutdown.Both);
-                    socket.Disconnect(true);
-                }
-                catch (Exception e)
-                {
+                    if (!socket.Connected)
+                    {
+                        socket.Connect(address.Address, address.Port);
+                    }
+
+                    if (!socket.Connected)
+                    {
+                        loopTimes++;
+
+                        if (loopTimes < loopTimesMax)
+                        {
+                            goto loop;
+                        }
+                    }
 
                     if (socket.Connected)
                     {
-                        socket.Close();
+                        socket.Send(headersData);
+
+                        data = GetData(metohd, socket);
+
+                        socket.Shutdown(SocketShutdown.Both);
                     }
 
-                    socket.Dispose();
                 }
-
-                if (times < loopTimes)
+                catch (Exception ex)
                 {
-                    //Thread.Sleep(200);
-                    System.Threading.Thread.CurrentThread.Join(200);
+                    if (loopTimes < loopTimesMax)
+                    {
+                        loopTimes++;
 
-
-                    goto loop;
+                        goto loop;
+                    }
+                    else
+                    {
+                        if (ErrorLog != null)
+                        {
+                            ErrorLog.Write(" Socket GetData " + ex.Message + "\r\n----------\r\n" + Encoding.UTF8.GetString(headersData));
+                        }
+                    }
                 }
+
+                socket.Close();
+                socket.Dispose();
             }
 
-            //socket.Close();
-            //socket.Dispose();
 
             return data;
         }

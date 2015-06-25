@@ -125,23 +125,6 @@ namespace PageCache.Store.MongoDB
         }
 
 
-        public Store.StoreDataInfo GetDataInfo(string type, string key)
-        {
-           
-            string collectionName = getCollectionName(key);
-            MongoCollection collection = db.GetCollection(collectionName);
-
-            if (collection.Exists())
-            {
-                string id = getId(type, key);
-                Store.StoreDataInfo info = collection.FindOneByIdAs<Store.StoreDataInfo>(id);
-
-                return info;
-            }
-
-            return null;
-        }
-
         public void Delete(string type, string key)
         {
             string collectionName = getCollectionName(key);

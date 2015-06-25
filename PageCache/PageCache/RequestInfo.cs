@@ -50,6 +50,8 @@ namespace PageCache
 
         public string Key { get; set; }
 
+        public string HttpMethod { get; set; }
+
         public Setting.Rule Rule
         {
             get;
@@ -94,10 +96,15 @@ namespace PageCache
 
             info.HostAddress = rule.Host.GetHostAddress();
 
+            info.HttpMethod = (context.Request.HttpMethod ?? string.Empty).ToUpper();
+
 
             string ae = context.Request.Headers.Get("Accept-Encoding") ?? string.Empty;
 
-            info.Headers["Accept-Encoding"] = ae.IndexOf("gzip") >= 0 ? "gzip" : string.Empty;
+            if (ae.IndexOf("gzip") >= 0)
+            {
+                info.Headers["Accept-Encoding"] = ae.IndexOf("gzip") >= 0 ? "gzip" : string.Empty;
+            }
 
 
             info.Store = rule.GetStore();
@@ -226,10 +233,15 @@ namespace PageCache
 
             StringBuilder genkeyUri = new StringBuilder();
 
-            genkeyUri.Append(uri.Scheme);
-            genkeyUri.Append("://");
-            genkeyUri.Append(uri.Host);
-            genkeyUri.Append(":" + uri.Port);
+            if (rule.Setting.Config.HashHostName)
+            {
+                genkeyUri.Append(uri.Scheme);
+                genkeyUri.Append("://");
+                genkeyUri.Append(uri.Host);
+                genkeyUri.Append(":" + uri.Port);
+            }
+
+
             genkeyUri.Append(uri.AbsolutePath);
 
             StringBuilder uriStringBuilder = new StringBuilder(scheme);
@@ -301,6 +313,7 @@ namespace PageCache
                         if (!isfirst)
                         {
                             uriStringBuilder.Append("&");
+
                         }
 
                         isfirst = false;
@@ -324,8 +337,10 @@ namespace PageCache
 
             info.UriString = uriStringBuilder.ToString();
 
+            //method.Equals("GET", StringComparison.OrdinalIgnoreCase) ? string.Empty : method
 
-            info.Key = GenKey(genkeyUri.ToString(), info.Form, info.Headers);
+
+            info.Key = GenKey(info, genkeyUri.ToString());
 
             info.Type = rule.Setting.Config.TypePrefix + rule.ConfigRule.Name;
 
@@ -339,6 +354,10 @@ namespace PageCache
 
 
             sb.AppendLine(info.HostAddress.ToString());
+            sb.Append("HttpMethod:");
+            sb.Append(info.Context.Request.HttpMethod);
+            sb.Append("\r\n");
+
 
             sb.Append("UriString:");
             sb.Append(info.UriString);
@@ -391,34 +410,36 @@ namespace PageCache
             return sb.ToString();
         }
 
-        static string GenKey(string uri, NameValueCollection form, NameValueCollection headers)
+        static string GenKey(RequestInfo info, string uri)
         {
-            StringBuilder keyStrings = new StringBuilder(uri);
+            StringBuilder keyStrings = new StringBuilder(info.HttpMethod);
+
+            keyStrings.Append(uri);
 
             keyStrings.Append("&");
 
-            for (int i = 0; i < form.Keys.Count; i++)
+            for (int i = 0; i < info.Form.Keys.Count; i++)
             {
-                string k = form.Keys[i];
+                string k = info.Form.Keys[i];
                 if (i > 0)
                 {
                     keyStrings.Append("&");
                 }
                 keyStrings.Append(k);
                 keyStrings.Append("=");
-                keyStrings.Append(form[k]);
+                keyStrings.Append(info.Form[k]);
             }
 
-            for (int i = 0; i < headers.Keys.Count; i++)
+            for (int i = 0; i < info.Headers.Keys.Count; i++)
             {
-                string k = headers.Keys[i];
+                string k = info.Headers.Keys[i];
                 if (i > 0)
                 {
                     keyStrings.Append("&");
                 }
                 keyStrings.Append(k);
                 keyStrings.Append("=");
-                keyStrings.Append(headers[k]);
+                keyStrings.Append(info.Headers[k]);
 
             }
 

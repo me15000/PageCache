@@ -122,34 +122,7 @@ namespace PageCache.Store.MySql
             return cache;
         }
 
-        public Store.StoreDataInfo GetDataInfo(string type, string key)
-        {
-
-            string tableName = getTableName(key);
-
-            string sql = "select `KEY`,`Type`,`CreatedDate`,`ExpiresAbsolute`,`Seconds` from `" + tableName + "` where `Key`=@Key and `Type`=@Type;";
-            Store.StoreDataInfo cache = null;
-
-
-            using (var reader = dbh.ExecuteReader(sql
-               , dbh.CreateParameter("@Key", key)
-               , dbh.CreateParameter("@Type", type)))
-            {
-                if (reader.Read())
-                {
-                    cache = new Store.StoreDataInfo();
-                    cache.Key = reader.GetString(0);
-                    cache.Type = reader.GetString(1);
-                    cache.CreatedDate = reader.GetDateTime(2);
-                    cache.ExpiresAbsolute = reader.GetDateTime(3);
-                    cache.Seconds = reader.GetInt32(4);
-                }
-
-                reader.Close();
-                reader.Dispose();
-            }
-            return cache;
-        }
+        
 
         public void Delete(string type, string key)
         {

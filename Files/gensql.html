@@ -1,9 +1,5 @@
 <html>
 <body>
-
-
-
-
 <div>
 	<table style="border:none">
 		<tr>
@@ -28,8 +24,6 @@
 	
 </div>
 
-
-
 <textarea id="sql_format_mysql" style="display:none">
 CREATE TABLE `data_{n}` (
   `KEY` char(32) COLLATE utf8_bin NOT NULL,
@@ -45,30 +39,22 @@ CREATE TABLE `data_{n}` (
 </textarea>
 
 <textarea id="sql_format_mssql" style="display:none">
-CREATE TABLE [data_{n}](
-	[KEY] [char](32) NOT NULL,
-	[Type] [varchar](30) NOT NULL,
-	
-	[HeadersData] [varbinary](MAX) NOT NULL,
-	[BodyData] [varbinary](MAX) NOT NULL,
-	[CreatedDate] [datetime] NOT NULL,
-	[ExpiresAbsolute] [datetime] NOT NULL,
-	[Seconds] [int] NOT NULL DEFAULT ((0)),
-	
-	 CONSTRAINT [PK_data_{n}] PRIMARY KEY CLUSTERED 
-	(
-		[KEY] ASC,
-		[Type] ASC
-	)	
-	WITH (PAD_INDEX  = OFF,  IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = OFF) ON [area{area}]
-	
-) TEXTIMAGE_ON [area{area}]
-go 
+truncate TABLE [dbo].[gg_mac_{n}] 
 </textarea>
-
-
 <!--
-
+CREATE TABLE [dbo].[gg_mac_{n}] (
+[mac] varchar(20) COLLATE Chinese_PRC_CI_AS NOT NULL ,
+[pid] int NOT NULL ,
+[show] bit NOT NULL DEFAULT ((0)) ,
+[selected] bit NOT NULL DEFAULT ((0)) ,
+[down_succ] bit NOT NULL DEFAULT ((0)) ,
+[install_succ] bit NOT NULL DEFAULT ((0)) ,
+[repeat] int NOT NULL DEFAULT ((0)) ,
+[date] datetime NOT NULL ,
+CONSTRAINT [gg_mac_{n}] PRIMARY KEY ([mac], [pid])
+)
+ON [PRIMARY]
+GO
 1------------------
 ALTER DATABASE [pagecache5] ADD FILEGROUP [area{area}]
 GO
@@ -76,7 +62,7 @@ GO
 2------------------
 ALTER DATABASE [pagecache5] ADD FILE
 (NAME = N'pagecache5{area}',
-FILENAME = N'D:\DataBases\Data\pagecache5{area}.ndf')
+FILENAME = N'D:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\DATA\pagecache5{area}.ndf')
 TO FILEGROUP [area{area}]
 GO
 
@@ -102,41 +88,281 @@ CREATE TABLE [data_{n}](
 	
 ) TEXTIMAGE_ON [area{area}]
 go 
-
-
-ALTER DATABASE [pagecache5] ADD FILEGROUP [area{area}]
-GO
-ALTER DATABASE [pagecache5] ADD FILE
-(NAME = N'pagecache5{area}',
-FILENAME = N'D:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\DATA\pagecache5{area}.ndf')
-TO FILEGROUP [area{area}]
+USE [pagecache5]
 GO
 
-DROP TABLE [data_{n}];
-go
-CREATE TABLE [data_{n}](
-	[KEY] [char](32) NOT NULL,
-	[Type] [varchar](30) NOT NULL,
-	
-	[HeadersData] [varbinary](MAX) NOT NULL,
-	[BodyData] [varbinary](MAX) NOT NULL,
-	[CreatedDate] [datetime] NOT NULL,
-	[ExpiresAbsolute] [datetime] NOT NULL,
-	[Seconds] [int] NOT NULL DEFAULT ((0)),
-	
-	 CONSTRAINT [PK_data_{n}] PRIMARY KEY CLUSTERED 
-	(
-		[KEY] ASC,
-		[Type] ASC
-	)	
-	WITH (PAD_INDEX  = OFF,  IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = OFF) ON [area{area}]
-) 
-go 
+/****** Object:  StoredProcedure [dbo].[proc_clear]    Script Date: 01/28/2015 11:57:48 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[proc_clear]
+as
+begin
+delete from [pagecache5].[dbo].[data_00] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_01] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_02] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_03] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_04] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_05] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_06] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_07] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_08] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_09] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_0f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_10] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_11] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_12] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_13] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_14] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_15] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_16] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_17] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_18] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_19] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_1f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_20] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_21] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_22] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_23] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_24] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_25] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_26] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_27] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_28] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_29] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_2f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_30] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_31] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_32] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_33] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_34] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_35] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_36] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_37] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_38] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_39] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_3f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_40] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_41] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_42] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_43] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_44] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_45] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_46] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_47] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_48] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_49] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_4f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_50] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_51] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_52] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_53] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_54] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_55] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_56] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_57] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_58] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_59] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_5f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_60] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_61] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_62] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_63] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_64] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_65] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_66] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_67] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_68] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_69] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_6f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_70] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_71] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_72] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_73] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_74] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_75] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_76] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_77] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_78] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_79] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_7f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_80] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_81] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_82] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_83] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_84] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_85] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_86] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_87] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_88] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_89] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_8f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_90] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_91] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_92] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_93] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_94] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_95] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_96] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_97] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_98] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_99] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9a] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9b] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9c] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9d] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9e] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_9f] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_a9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_aa] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ab] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ac] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ad] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ae] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_af] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_b9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ba] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_bb] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_bc] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_bd] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_be] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_bf] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_c9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ca] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_cb] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_cc] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_cd] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ce] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_cf] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_d9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_da] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_db] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_dc] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_dd] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_de] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_df] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_e9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ea] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_eb] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ec] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ed] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ee] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ef] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f0] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f1] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f2] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f3] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f4] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f5] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f6] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f7] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f8] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_f9] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_fa] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_fb] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_fc] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_fd] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_fe] where ExpiresAbsolute < GetDate() - 1
+delete from [pagecache5].[dbo].[data_ff] where ExpiresAbsolute < GetDate() - 1
+
+end
+GO
 -->
 
 <script>
-
-
 
 function GenSQL() {
 	var q = function (id) {

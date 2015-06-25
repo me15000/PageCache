@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using PageCache.Store.SQLServer;
 
 namespace PageCache.Store
 {
@@ -8,14 +7,20 @@ namespace PageCache.Store
     {
         public static IStore CreateInstance(Config.Store configStore)
         {
-            if (!string.IsNullOrEmpty(configStore.FullTypeName) && !string.IsNullOrEmpty(configStore.AssemblyName))
+            if (!string.IsNullOrEmpty(configStore.FullTypeName))
             {
                 if (configStore.FullTypeName.IndexOf("PageCache.Store.SQLServer") >= 0)
                 {
-                    return new SQLServerStore(configStore.ConnectionString);
+                    return new SQLServer.SQLServerStore(configStore.ConnectionString);
                 }
-                else
+                else if (configStore.FullTypeName.IndexOf("PageCache.Store.Disk") >= 0)
                 {
+                    return new Disk.DiskStore(configStore.ConnectionString);
+                }
+                else if (!string.IsNullOrEmpty(configStore.AssemblyName))
+                {
+
+
                     Assembly assembly = Assembly.Load(configStore.AssemblyName);
 
                     if (assembly != null)
@@ -40,6 +45,7 @@ namespace PageCache.Store
 
                         }
                     }
+
                 }
             }
 

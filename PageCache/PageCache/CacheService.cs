@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Web;
 
 namespace PageCache
@@ -42,8 +40,7 @@ namespace PageCache
 
         Config.Config config = null;
 
-
-        List<string> creatingKeyList = null;
+        //List<string> creatingKeyList = null;
 
 
         #endregion
@@ -55,6 +52,7 @@ namespace PageCache
         /// <param name="module"></param>
         public CacheService(Setting.Setting setting, CacheModule module)
         {
+
             this.setting = setting;
 
             this.module = module;
@@ -67,7 +65,7 @@ namespace PageCache
 
             this.storeDataList = new Store.StoreDataList(config.CCLevel, config.StoreBufferSize);
 
-            this.creatingKeyList = new List<string>(config.CCLevel);
+            //this.creatingKeyList = new List<string>();
 
             //this.requestQueue = new RequestQueue();
 
@@ -102,37 +100,6 @@ namespace PageCache
 
             string type = context.Request.QueryString["type"] ?? "all";
 
-            if (true)
-            {
-                var datalist = creatingKeyList;
-
-                context.Response.Write("[creatingKeyList,Count:" + datalist.Count + "]:\r\n");
-
-                foreach (var item in datalist)
-                {
-                    context.Response.Write(item + "\r\n");
-                }
-            }
-
-            /*
-            if (type.IndexOf("all") >= 0 || type.IndexOf("mem") >= 0)
-            {
-
-                var datalist = memoryDataList.DataList;
-
-                context.Response.Write("[memoryDataList,Count:" + datalist.Count + ",Capacity:" + memoryDataList.Capacity + "]:\r\n");
-
-                foreach (var item in datalist)
-                {
-
-                    context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
-                }
-            }
-            */
-
-
-
-
 
             if (type.IndexOf("all") >= 0 || type.IndexOf("last") >= 0)
             {
@@ -164,7 +131,7 @@ namespace PageCache
 
                 foreach (var item in datalist)
                 {
-                    context.Response.Write("key:" + item.Key + ",type:" + item.Type + ",expires:" + item.ExpiresAbsolute.ToString() + ",size:" + item.BodyData.Length + "\r\n");
+                    context.Response.Write("key:" + item.Data.Key + ",type:" + item.Data.Type + ",expires:" + item.Data.ExpiresAbsolute.ToString() + ",size:" + item.Data.BodyData.Length + "\r\n");
                 }
             }
 
@@ -173,13 +140,15 @@ namespace PageCache
 
         const string SYSTEM_ERROR_MESSAGE = "The system is busy now. Please try later.";
 
+
         /// <summary>
         /// 入口
         /// </summary>
         /// <param name="context"></param>
-        public void Process(HttpContext context)
+        /// <param name="info"></param>
+        public void Process(HttpContext context, out RequestInfo info)
         {
-
+            info = null;
 
             if (context.Request.RawUrl.IndexOf(this.config.StatusKey) >= 0)
             {
@@ -199,7 +168,7 @@ namespace PageCache
 
                 context.Response.AddHeader("PageCache", "Powered by https://github.com/me15000");
 
-                var info = RequestInfo.Create(context, rule);
+                info = RequestInfo.Create(context, rule);
 
                 if (info != null)
                 {
@@ -212,7 +181,7 @@ namespace PageCache
 
                     if (!EchoData(info))
                     {
-                        context.Response.StatusCode = 503;
+                        context.Response.StatusCode = 504;
 
                         if (errorLog != null)
                         {
@@ -241,36 +210,6 @@ namespace PageCache
             #region 从缓存读取
             if (!hasRefreshKey)
             {
-                //尝试从内存中读缓存
-                /*
-                if (info.Rule.ConfigRule.MemoryEnable)
-                {
-                    Store.StoreData data = memoryDataList.Get(info.Type, info.Key);
-
-                    if (data != null && data.BodyData != null)
-                    {
-                        olddata = data;
-
-                        if (setting.Config.ReadOnly)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
-
-                        if (data.ExpiresAbsolute > DateTime.Now)
-                        {
-                            if (EchoData(info.Context, data))
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                */
-
-
                 //尝试从最后的数据列中读取缓存
                 if (true)
                 {
@@ -348,21 +287,6 @@ namespace PageCache
                         {
                             olddata = data;
 
-
-                            lastReadDataList.Add(data);
-                            //如果启用了内存并且达到并发数量时,使用内存缓存
-                            /*
-                            if (info.Rule.ConfigRule.MemoryEnable)
-                            {
-                                int n = requestQueue.GetCount(info);
-
-                                if (n >= setting.Config.MemoryRule.QueueCount)
-                                {
-                                    memoryDataList.Add(data);
-                                }
-                            }
-                            */
-
                             if (setting.Config.ReadOnly)
                             {
                                 if (EchoData(info.Context, data))
@@ -373,6 +297,8 @@ namespace PageCache
 
                             if (data.ExpiresAbsolute > DateTime.Now)
                             {
+                                lastReadDataList.Add(data);
+
                                 if (EchoData(info.Context, data))
                                 {
                                     return true;
@@ -400,65 +326,21 @@ namespace PageCache
 
 
 
-        string GetCreatingKey(RequestInfo info)
-        {
-            return info.Key + ":" + info.Type;
-        }
-
 
         bool TryCreateAndEchoData(RequestInfo info, Store.StoreData olddata)
         {
 
+            Store.StoreData outdata = null;
 
-            string creatingKey = GetCreatingKey(info);
-
-            //优先创建缓存，如果失败输出老缓存
-
-
-            //创建并输出缓存
-
-            //保证只有一个创建进程,等待这个进程完成
-
-            if (creatingKeyList.Contains(creatingKey))
+            if (TryCreateAndSaveData(info, out outdata))
             {
-                int maxLoopTimes = 5;
-                int loopTimes = 0;
 
-            loop:
-
-                loopTimes++;
-
-                System.Threading.Thread.CurrentThread.Join(200);
-
-                Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
-
-                if (data != null)
+                if (EchoData(info.Context, outdata))
                 {
-                    if (EchoData(info.Context, data))
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (loopTimes <= maxLoopTimes)
-                    {
-                        goto loop;
-                    }
+                    return true;
                 }
             }
-            else
-            {
-                Store.StoreData outdata = null;
 
-                if (TryCreateAndSaveData(info, out outdata))
-                {
-                    if (EchoData(info.Context, outdata))
-                    {
-                        return true;
-                    }
-                }
-            }
 
             //上述步骤执行失败，输出老缓存
             if (olddata != null)
@@ -480,70 +362,32 @@ namespace PageCache
 
         bool TryEchoAndCreateData(RequestInfo info, Store.StoreData olddata)
         {
-            string creatingKey = GetCreatingKey(info);
 
             //优先输出老缓存，再创建保存缓存
             if (olddata != null)
             {
 
 
-                if (!creatingKeyList.Contains(creatingKey))
-                {
-                    ThreadPool.QueueUserWorkItem(TryCreateDataAsync, info);
-                }
-
-
                 if (EchoData(info.Context, olddata))
                 {
+                    Store.StoreData outdata;
+
+                    TryCreateAndSaveData(info, out outdata);
+
                     return true;
                 }
             }
             else
             {
-                //创建并输出缓存
-                //保证只有一个创建进程,等待这个进程完成
-                if (creatingKeyList.Contains(creatingKey))
+
+
+                Store.StoreData outdata = null;
+
+                if (TryCreateAndSaveData(info, out outdata))
                 {
-
-                    //return false;
-
-                    int maxLoopTimes = 5;
-                    int loopTimes = 0;
-
-                loop:
-
-                    loopTimes++;
-
-                    System.Threading.Thread.CurrentThread.Join(200);
-
-                    Store.StoreData data = lastReadDataList.Get(info.Type, info.Key);
-
-                    if (data != null)
+                    if (EchoData(info.Context, outdata))
                     {
-                        if (EchoData(info.Context, data))
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        if (loopTimes <= maxLoopTimes)
-                        {
-                            goto loop;
-                        }
-                    }
-
-                }
-                else
-                {
-                    Store.StoreData outdata = null;
-
-                    if (TryCreateAndSaveData(info, out outdata))
-                    {
-                        if (EchoData(info.Context, outdata))
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
@@ -580,20 +424,12 @@ namespace PageCache
                     //存入 lastRead
                     lastReadDataList.Add(outdata);
 
-                    //存入 memory
-                    /*
-                    if (info.Rule.ConfigRule.MemoryEnable)
-                    {
-                        if (memoryDataList.Get(info.Type, info.Key) != null)
-                        {
-                            memoryDataList.Add(outdata);
-                        }
-                    }
-                    */
                     return true;
                 }
-
             }
+
+
+
 
 
             return false;
@@ -604,44 +440,66 @@ namespace PageCache
         {
             Store.StoreData storeData = null;
 
-            string creatingKey = GetCreatingKey(info);
-
-
-            creatingKeyList.Remove(creatingKey);
-            creatingKeyList.Add(creatingKey);
 
             byte[] rheadersData = GetRequestHeadersData(info);
 
+
+            var method = Common.HttpClient.HTTPMethod.GET;
+
+            string client_method = info.HttpMethod;
+
+            switch (client_method)
+            {
+                case "GET":
+                    method = Common.HttpClient.HTTPMethod.GET;
+                    break;
+                case "POST":
+                    method = Common.HttpClient.HTTPMethod.POST;
+                    break;
+                case "HEAD":
+                    method = Common.HttpClient.HTTPMethod.HEAD;
+                    break;
+                default:
+                    break;
+            }
+
+            Common.HttpData http_data = null;
+
             try
             {
-
-                Common.HttpData httpdata = httpClient.GetData(info.HostAddress, rheadersData);
-
-                if (httpdata != null)
-                {
-                    var data = ConvertHttpDataToStoreData(info, httpdata);
-                    if (data != null)
-                    {
-                        if (data.HeadersData != null)
-                        {
-                            storeData = data;
-                        }
-                    }
-                }
-
+                http_data = httpClient.GetData(method, info.HostAddress, rheadersData);
             }
             catch (Exception ex)
             {
 
+                if (errorLog != null && http_data == null)
+                {
+                    errorLog.Write("CreateData failed! " + ex.Message + "\r\n----------\r\n" + info.ToString());
+                }
             }
 
-            creatingKeyList.Remove(creatingKey);
+
+            if (http_data != null)
+            {
+                var store_data = ConvertHttpDataToStoreData(info, http_data);
+
+                if (store_data != null)
+                {
+                    if (store_data.HeadersData != null)
+                    {
+                        storeData = store_data;
+                    }
+                }
+            }
+
+
+
 
             return storeData;
         }
 
 
-        const int CHUNKED_SIZE = 1024 * 16;
+        const int CHUNKED_SIZE = 1024 * 128;
 
         bool EchoData(HttpContext context, Store.StoreData data)
         {
@@ -686,49 +544,56 @@ namespace PageCache
 
 
             var response = context.Response;
-            if (data.BodyData != null)
-            {
-                var bodyData = data.BodyData;
 
-                if (bodyData.Length > CHUNKED_SIZE)
+            var bodyData = data.BodyData;
+
+            if (bodyData != null)
+            {
+                int totalCount = bodyData.Length;
+
+                if (totalCount > CHUNKED_SIZE)
                 {
+
                     response.BufferOutput = false;
+
+                    var outputStream = response.OutputStream;
 
                     try
                     {
-                        using (var outputStream = response.OutputStream)
+                        int nowCount = 0;
+
+                        while (nowCount < totalCount)
                         {
-                            int total = bodyData.Length;
+                            int leftCount = totalCount - nowCount;
 
-                            int count = 0;
-
-                            while (count < total)
+                            if (leftCount < CHUNKED_SIZE)
                             {
-                                outputStream.WriteByte(bodyData[count]);
-
-                                count++;
-
-                                if (count % CHUNKED_SIZE == 0)
-                                {
-                                    outputStream.Flush();
-                                }
+                                outputStream.Write(bodyData, nowCount, leftCount);
+                                outputStream.Flush();
+                                nowCount += leftCount;
                             }
-
-                            outputStream.Flush();
-
-
-                            outputStream.Close();
-                            outputStream.Dispose();
+                            else
+                            {
+                                outputStream.Write(bodyData, nowCount, CHUNKED_SIZE);
+                                outputStream.Flush();
+                                nowCount += CHUNKED_SIZE;
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
+
+                    }
+                    finally
+                    {
+                        outputStream.Close();
+                        outputStream.Dispose();
                     }
 
                 }
                 else
                 {
-                    response.BinaryWrite(data.BodyData);
+                    response.BinaryWrite(bodyData);
                 }
             }
 
@@ -749,19 +614,19 @@ namespace PageCache
             return false;
         }
 
-        void EchoBrowserCache(HttpContext context, Store.StoreDataInfo inf)
+        void EchoBrowserCache(HttpContext context, Store.StoreData data)
         {
-            if (inf != null)
+            if (data != null)
             {
-                string time = inf.CreatedDate.ToString("r");
-                TimeSpan ts = TimeSpan.FromSeconds(inf.Seconds);
+                string time = data.CreatedDate.ToString("r");
+                TimeSpan ts = TimeSpan.FromSeconds(data.Seconds);
                 DateTime now = DateTime.Now;
                 DateTime expDate = now.Add(ts);
 
                 context.Response.Cache.SetCacheability(HttpCacheability.Public);
                 context.Response.Cache.SetExpires(expDate);
                 context.Response.Cache.SetMaxAge(ts);//cdn 缓存时间
-                context.Response.Cache.SetLastModified(inf.CreatedDate);
+                context.Response.Cache.SetLastModified(data.CreatedDate);
             }
         }
 
@@ -907,9 +772,7 @@ namespace PageCache
 
             StringBuilder requestStringBuilder = new StringBuilder();
 
-            requestStringBuilder.AppendFormat("{0} {1} {2}/1.1\r\n"
-                , info.Context.Request.HttpMethod.ToUpper()
-                , uri.ToString(), uri.Scheme.ToUpper());
+            requestStringBuilder.AppendFormat("{0} {1} HTTP/1.1\r\n", info.HttpMethod, uri.PathAndQuery);
 
 
             if (info.HostAddress.Port == 80)
@@ -921,7 +784,8 @@ namespace PageCache
                 requestStringBuilder.AppendFormat("Host: {0}:{1}\r\n", uri.Host, info.HostAddress.Port);
             }
 
-            requestStringBuilder.AppendFormat("Connection: Close\r\n");
+            //http 1.1 中所有的连接都是 keep-alive
+            requestStringBuilder.AppendFormat("Connection: keep-alive\r\n");
 
             foreach (string k in info.Headers.Keys)
             {
@@ -1020,8 +884,6 @@ namespace PageCache
             else
             {
                 data.BodyData = new byte[0];
-
-
             }
 
 

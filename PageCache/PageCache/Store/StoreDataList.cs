@@ -5,11 +5,10 @@ using System.Threading;
 
 namespace PageCache.Store
 {
-
-    public class StoreDataEntity : StoreData
+    public class StoreDataEntity
     {
         public IStore Store { get; set; }
-
+        public StoreData Data { get; set; }
     }
 
     public class StoreDataList
@@ -77,7 +76,16 @@ namespace PageCache.Store
 
         public StoreData Get(string type, string key)
         {
-            return Find(type, key);
+            var entity = Find(type, key);
+
+            if (entity != null)
+            {
+
+                return entity.Data;
+
+            }
+
+            return null;
         }
 
         StoreDataEntity Find(string type, string key)
@@ -121,22 +129,9 @@ namespace PageCache.Store
 
             StoreDataEntity entity = new StoreDataEntity
             {
-
-                BodyData = data.BodyData
-                ,
-                CreatedDate = data.CreatedDate
-                ,
-                ExpiresAbsolute = data.ExpiresAbsolute
-                ,
-                HeadersData = data.HeadersData
-                ,
-                Key = data.Key
-                ,
-                Seconds = data.Seconds
-                ,
                 Store = store
                 ,
-                Type = data.Type
+                Data = data
             };
 
             string dk = GetDataKey(data.Type, data.Key);
@@ -190,11 +185,11 @@ namespace PageCache.Store
 
                     if (entity != null)
                     {
-                        if (entity.ExpiresAbsolute > now)
+                        if (entity.Data.ExpiresAbsolute > now)
                         {
                             if (entity.Store != null)
                             {
-                                entity.Store.Save(entity);
+                                entity.Store.Save(entity.Data);
                             }
                         }
                     }

@@ -9,6 +9,7 @@ namespace PageCache
         const string CACHE_KEY = "PAGECACHE";
 
         CacheService service = null;
+        int scriptTimeout = 10;
 
         public void Init(HttpApplication context)
         {
@@ -85,6 +86,13 @@ namespace PageCache
 
                     if (setting != null)
                     {
+                        this.scriptTimeout = Convert.ToInt32(Math.Ceiling((decimal)(setting.Config.NetReceiveTimeout + setting.Config.NetSendTimeout) / (decimal)1000));
+
+                        if (this.scriptTimeout <= 0)
+                        {
+                            this.scriptTimeout = 10;
+                        }
+
                         cache.Insert(cache_key, setting);
                     }
                 }
@@ -147,15 +155,21 @@ namespace PageCache
 
             HttpContext context = application.Context;
 
+
+
+            context.Server.ScriptTimeout = this.scriptTimeout;
+
+            RequestInfo info = null;
+
             try
             {
-                this.service.Process(context);
+                this.service.Process(context, out info);
             }
             catch (Exception ex)
             {
                 if (this.service.ErrorLog != null)
                 {
-                    this.service.ErrorLog.Write(ex.Message);
+                    this.service.ErrorLog.Write("CacheModule: " + ex.Message + "\r\n----------\r\n" + (info == null ? string.Empty : info.ToString()));
                 }
             }
         }
