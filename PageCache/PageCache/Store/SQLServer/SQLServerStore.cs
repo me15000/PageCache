@@ -134,11 +134,11 @@ namespace PageCache.Store.SQLServer
                         reader.Close();
                         reader.Dispose();
                     }
-
                     command.Dispose();
+                    connection.Close();
                 }
 
-                connection.Close();
+               
                 connection.Dispose();
             }
 

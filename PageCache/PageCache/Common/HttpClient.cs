@@ -39,6 +39,464 @@ namespace PageCache.Common
     }
 
 
+
+
+    public class HttpClient
+    {
+
+        const string Sign_Content_Length = "Content-Length";
+        const string Sign_Header_End = "\r\n";
+
+        const string Sign_Chunked_End = "\r\n";
+        const string Sign_Chunked = "chunked";
+
+        const int None_Data = -1;
+        const int Buffer_Size = 256;
+
+        byte[] ParseChunkedData(byte[] data)
+        {
+            int endPosition = data.Length;
+
+            List<byte> list = new List<byte>();
+
+
+            using (MemoryStream stream = new MemoryStream(data))
+            {
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    StringBuilder line = new StringBuilder();
+
+                    while (stream.Position < endPosition)
+                    {
+                        line.Append(reader.ReadChar());
+
+                        string lineString = line.ToString();
+
+                        int inx = lineString.IndexOf(Sign_Chunked_End);
+
+                        if (inx > 0)
+                        {
+                            int count = Convert.ToInt32(lineString.Substring(0, inx), 16);
+
+                            if (count > 0)
+                            {
+                                byte[] bytes = reader.ReadBytes(count);
+                                if (bytes != null)
+                                {
+                                    list.AddRange(bytes);
+                                }
+                            }
+
+                            line.Clear();
+                        }
+                        else if (inx == 0)
+                        {
+                            break;
+                        }
+                    }
+
+                    reader.Close();
+                    reader.Dispose();
+                }
+
+                stream.Close();
+                stream.Dispose();
+            }
+
+
+            return list.ToArray();
+        }
+
+        bool IsSame(char[] chars, List<byte> bytes)
+        {
+            if (chars.Length != bytes.Count)
+            {
+                return false;
+            }
+
+            bool same = true;
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                same = same && chars[i] == bytes[i];
+            }
+
+            return same;
+
+        }
+
+        char[] Sign_End = { '\r', '\n', '\r', '\n' };
+
+        int receiveTimeout = 5000;
+
+        /// <summary>
+        /// 接收超时默认2秒
+        /// </summary>
+        public int ReceiveTimeout
+        {
+            get { return receiveTimeout; }
+            set { receiveTimeout = value; }
+        }
+
+        int sendTimeout = 5000;
+
+        /// <summary>
+        /// 发送超时默认1秒
+        /// </summary>
+        public int SendTimeout
+        {
+            get { return sendTimeout; }
+            set { sendTimeout = value; }
+        }
+
+        public HttpData GetData(string host, byte[] headersData)
+        {
+            return GetData(host, 80, headersData);
+        }
+
+        public Log ErrorLog { get; set; }
+
+        List<byte> ReceiveAllData(Socket socket)
+        {
+            int zero_times = 0;
+            int zero_max = 3;
+
+
+            List<byte> list = new List<byte>();
+
+            int nowContentLength = 0;
+
+
+
+            byte[] buffer = new byte[Buffer_Size];
+
+
+            try
+            {
+
+                while (true)
+                {
+                    int receiveCount = socket.Receive(buffer, Buffer_Size, SocketFlags.None);
+
+
+                    if (receiveCount > 0)
+                    {
+                        zero_times = 0;
+
+                        for (int i = 0; i < receiveCount; i++)
+                        {
+                            list.Add(buffer[i]);
+                        }
+
+                        nowContentLength += receiveCount;
+                    }
+
+
+                    if (receiveCount == 0 || receiveCount < Buffer_Size)
+                    {
+                        zero_times++;
+                        if (zero_times >= zero_max)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                if (ErrorLog != null)
+                {
+                    ErrorLog.Write(ex.ToString());
+                }
+            }
+
+            return list;
+        }
+
+        public HttpData GetData(Socket socket)
+        {
+            List<byte> list_data = ReceiveAllData(socket);
+
+            byte[] header_data = null;
+            byte[] body_data = null;
+
+            int sign_len = Sign_End.Length;
+
+            //拆分出 HTTP Header Body
+            if (list_data.Count > sign_len)
+            {
+
+                for (int i = 0; i <= list_data.Count - sign_len; i++)
+                {
+                    var range = list_data.GetRange(i, sign_len);
+
+                    if (IsSame(Sign_End, range))
+                    {
+                        header_data = list_data.GetRange(0, i + sign_len).ToArray();
+
+                        if (header_data.Length < list_data.Count)
+                        {
+                            body_data = list_data.GetRange(i + sign_len, list_data.Count - header_data.Length).ToArray();
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+
+            if (header_data == null)
+            {
+                return null;
+            }
+
+            string headerString = Encoding.ASCII.GetString(header_data);
+
+            HttpDataInfo info = ParseHeaderString(headerString);
+
+            HttpData data = null;
+
+            if (info != null)
+            {
+                data = new HttpData
+                {
+
+                    HeadersStrings = info.HeadersStrings
+                    ,
+                    Scheme = info.Scheme
+                    ,
+                    StatusCode = info.StatusCode
+                    ,
+                    StatusDescription = info.StatusDescription
+                    ,
+                    Headers = info.Headers
+                };
+
+                if (body_data != null)
+                {
+                    if (info.ContentLength > 0)
+                    {
+                        if (body_data == null)
+                        {
+                            throw new Exception("ContentLength>0 and ReceiveBodyData is null");
+                        }
+
+                        data.BodyData = body_data;
+
+                    }
+                    else if (info.ContentLength == None_Data)
+                    {
+                        string tran = info.Headers["Transfer-Encoding"] ?? string.Empty;
+
+                        if (tran.Equals(Sign_Chunked, StringComparison.OrdinalIgnoreCase))
+                        {
+
+                            if (body_data != null)
+                            {
+                                data.BodyData = ParseChunkedData(body_data);
+                            }
+                            else
+                            {
+                                throw new Exception("Transfer-Encoding is " + Sign_Chunked + " and ReceiveBodyData is null");
+                            }
+                        }
+                        else
+                        {
+                            data.BodyData = body_data;
+                        }
+                    }
+                }
+
+
+
+                if (data.BodyData != null)
+                {
+                    data.ContentLength = data.BodyData.Length;
+                }
+                else
+                {
+                    data.ContentLength = 0;
+                }
+            }
+
+            return data;
+        }
+
+        public HttpData GetData(string host, int port, byte[] headersData)
+        {
+            HttpData data = null;
+
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+
+
+
+                socket.ReceiveTimeout = receiveTimeout;
+                socket.SendTimeout = sendTimeout;
+
+
+                int loopTimes = 0;
+                int loopTimesMax = 2;
+
+            loop:
+
+
+                if (!socket.Connected)
+                {
+                    socket.Connect(host, port);
+                }
+
+                if (!socket.Connected)
+                {
+                    loopTimes++;
+
+                    if (loopTimes < loopTimesMax)
+                    {
+                        goto loop;
+                    }
+                }
+
+                if (socket.Connected)
+                {
+
+                    socket.Send(headersData);
+                    data = GetData(socket);
+                    socket.Shutdown(SocketShutdown.Both);
+                }
+            }
+
+            return data;
+        }
+
+        public HttpData GetData(IPEndPoint address, byte[] headersData)
+        {
+            HttpData data = null;
+
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+
+
+
+                socket.ReceiveTimeout = receiveTimeout;
+                socket.SendTimeout = sendTimeout;
+
+                int loopTimes = 0;
+                int loopTimesMax = 2;
+
+            loop:
+
+                if (!socket.Connected)
+                {
+                    socket.Connect(address);
+                }
+
+                if (!socket.Connected)
+                {
+                    loopTimes++;
+
+                    if (loopTimes < loopTimesMax)
+                    {
+                        goto loop;
+                    }
+                }
+
+                if (socket.Connected)
+                {
+
+                    socket.Send(headersData);
+                    data = GetData(socket);
+                    socket.Shutdown(SocketShutdown.Both);
+                }
+
+            }
+
+
+            return data;
+        }
+
+        public static HttpDataInfo ParseHeaderString(string headersStringText)
+        {
+
+            string[] headersStrings = headersStringText.Split(new string[] { Sign_Header_End }, StringSplitOptions.None);
+
+            if (headersStrings.Length > 0)
+            {
+                HttpDataInfo info = new HttpDataInfo();
+
+                info.HeadersStrings = headersStringText;
+
+                string firstLine = headersStrings[0].Trim();
+
+                if (!string.IsNullOrEmpty(firstLine))
+                {
+                    int inx_space1 = firstLine.IndexOf(' ');
+
+                    int inx_space2 = firstLine.IndexOf(' ', inx_space1 + 1);
+
+                    if (inx_space2 > inx_space1 && inx_space1 > 0)
+                    {
+                        string codeString = firstLine.Substring(inx_space1 + 1, inx_space2 - inx_space1);
+
+                        int code = 0;
+
+                        if (int.TryParse(codeString, out code))
+                        {
+                            info.StatusCode = code;
+                        }
+
+                        info.Scheme = firstLine.Substring(0, inx_space1);
+
+                        info.StatusDescription = firstLine.Substring(inx_space2 + 1);
+                    }
+                }
+
+                string headerSplitSign = ": ";
+
+                if (headersStrings.Length > 1)
+                {
+                    for (int i = 1; i < headersStrings.Length; i++)
+                    {
+                        string header = headersStrings[i].Trim();
+
+                        int signIndex = header.IndexOf(headerSplitSign);
+
+                        int valueIndex = signIndex + headerSplitSign.Length;
+
+                        if (signIndex > 0 && valueIndex < header.Length)
+                        {
+                            string key = header.Substring(0, signIndex);
+
+                            string value = header.Substring(valueIndex);
+
+                            if (key.Equals(Sign_Content_Length, StringComparison.OrdinalIgnoreCase))
+                            {
+                                int contentLength = 0;
+                                if (int.TryParse(value, out contentLength))
+                                {
+                                    info.ContentLength = contentLength;
+                                }
+                                else
+                                {
+                                    info.ContentLength = None_Data;
+                                }
+                            }
+
+                            info.Headers[key] = value;
+                        }
+                    }
+                }
+
+                return info;
+            }
+
+            return null;
+        }
+
+    }
+
+
+    /*
     public class HttpClient
     {
 
@@ -592,5 +1050,5 @@ namespace PageCache.Common
 
             return data;
         }
-    }
+    }*/
 }

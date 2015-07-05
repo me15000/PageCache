@@ -169,7 +169,7 @@ namespace PageCache
             {
                 if (this.service.ErrorLog != null)
                 {
-                    this.service.ErrorLog.Write("CacheModule: " + ex.Message + "\r\n----------\r\n" + (info == null ? string.Empty : info.ToString()));
+                    this.service.ErrorLog.Write("CacheModule: " + ex.Message + "\r\n" + ex.ToString() + "\r\n----------\r\n" + (info == null ? string.Empty : info.ToString()));
                 }
             }
         }

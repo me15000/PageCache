@@ -1,7 +1,11 @@
-ï»¿<?xml version="1.0" encoding="utf-8"?>
+  
+
+  
+  
+<?xml version="1.0" encoding="utf-8"?>
 
 <!--
-  æœ‰å…³å¦‚ä½•é…ç½® ASP.NET åº”ç”¨ç¨‹åºçš„è¯¦ç»†ä¿¡æ¯ï¼Œè¯·è®¿é—®
+  ÓÐ¹ØÈçºÎÅäÖÃ ASP.NET Ó¦ÓÃ³ÌÐòµÄÏêÏ¸ÐÅÏ¢£¬Çë·ÃÎÊ
   http://go.microsoft.com/fwlink/?LinkId=169433
   -->
 
@@ -12,7 +16,7 @@
 
 
     <!--
-    åŽæœŸåŠ å…¥è¿œç¨‹é…ç½®æ–‡ä»¶
+    ºóÆÚ¼ÓÈëÔ¶³ÌÅäÖÃÎÄ¼þ
     
     <add key="PageCache:Config" value="http://config.xxx.com/pageCache.xml" />
     -->
@@ -28,11 +32,10 @@
     </connectionManagement>
   </system.net>
   
-
   <system.web>
 
     <!--
-  IIS6 ä¸‹ä½¿ç”¨
+  IIS6 ÏÂÊ¹ÓÃ
     <httpModules>
       <add name="pageCacheModule" type="PageCache.CacheModule"/>
     </httpModules>

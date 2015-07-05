@@ -443,7 +443,7 @@ namespace PageCache
 
             byte[] rheadersData = GetRequestHeadersData(info);
 
-
+            /*
             var method = Common.HttpClient.HTTPMethod.GET;
 
             string client_method = info.HttpMethod;
@@ -462,12 +462,18 @@ namespace PageCache
                 default:
                     break;
             }
+            */
 
             Common.HttpData http_data = null;
 
+            http_data = httpClient.GetData(info.HostAddress, rheadersData);
+
+            /*
             try
             {
-                http_data = httpClient.GetData(method, info.HostAddress, rheadersData);
+               
+
+                
             }
             catch (Exception ex)
             {
@@ -477,6 +483,8 @@ namespace PageCache
                     errorLog.Write("CreateData failed! " + ex.Message + "\r\n----------\r\n" + info.ToString());
                 }
             }
+
+            */
 
 
             if (http_data != null)
@@ -651,17 +659,30 @@ namespace PageCache
         //输出浏览器缓存
         bool EchoClientCache(HttpContext context, int cacheSeconds)
         {
-
             bool browserCacheNotExpired = false;
+            string if_modified_since = null;
 
-            string if_modified_since = context.Request.Headers["If-Modified-Since"] ?? string.Empty;
-
-            DateTime if_date;
-            if (DateTime.TryParse(if_modified_since, out if_date))
+            try
             {
-                if (if_date.AddSeconds(cacheSeconds) > DateTime.Now)
+                if_modified_since = context.Request.Headers["If-Modified-Since"] ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                if (ErrorLog != null)
                 {
-                    browserCacheNotExpired = true;
+                    ErrorLog.Write(context.Request.RawUrl + "\r\n" + ex.ToString());
+                }
+            }
+
+            if (!string.IsNullOrEmpty(if_modified_since))
+            {
+                DateTime if_date;
+                if (DateTime.TryParse(if_modified_since, out if_date))
+                {
+                    if (if_date.AddSeconds(cacheSeconds) > DateTime.Now)
+                    {
+                        browserCacheNotExpired = true;
+                    }
                 }
             }
 
@@ -785,7 +806,8 @@ namespace PageCache
             }
 
             //http 1.1 中所有的连接都是 keep-alive
-            requestStringBuilder.AppendFormat("Connection: keep-alive\r\n");
+            //requestStringBuilder.AppendFormat("Connection: keep-alive\r\n");
+            requestStringBuilder.AppendFormat("Connection: close\r\n");
 
             foreach (string k in info.Headers.Keys)
             {
