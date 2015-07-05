@@ -17,29 +17,29 @@ namespace PageCache.Setting
         {
             get { return stores; }
         }
-       
+
 
 
         public Stores(Setting setting)
         {
             this.setting = setting;
-         
-              stores = new Dictionary<string, Store.IStore>(setting.Config.Stores.Count);
 
-              for (int i = 0; i < setting.Config.Stores.Count; i++)
-              {
-                  Config.Store configStore = setting.Config.Stores[i];           
-     
-                  Store.IStore store = Store.Factory.CreateInstance(configStore);
+            stores = new Dictionary<string, Store.IStore>(setting.Config.Stores.Count);
 
-                  stores.Add(configStore.Name, store);
-              }
-             
+            for (int i = 0; i < setting.Config.Stores.Count; i++)
+            {
+                Config.Store configStore = setting.Config.Stores[i];
+
+                Store.IStore store = Store.Factory.CreateInstance(configStore);
+
+                stores.Add(configStore.Name, store);
+            }
+
         }
 
         public Store.IStore Get(string storeName)
         {
-         
+
 
 
             return stores[storeName];
@@ -75,30 +75,40 @@ namespace PageCache.Setting
             }
             else if (setting.Config.Stores.Count > 1)
             {
-                int weight_max = 100;
-                Random r = new Random();
-                int weight = r.Next(0, weight_max);
+                //配置值为1到100 包含100
 
-                int left = 0;
+                int max = 101;
+
+                Random r = new Random();
+                int rnd = r.Next(1, max);
+
+                int left = 1;
+
                 for (int i = 0; i < setting.Config.Stores.Count; i++)
                 {
                     var item = setting.Config.Stores[i];
 
-                    int right = left + (item.Weight > 0 ? item.Weight : weight_max - left);
+                    int weight = item.Weight;
 
-
-                    if (weight >= left && weight < right)
+                    if (weight > 0 && weight < max)
                     {
-                        storeName = item.Name;
-                        break;
-                    }
+                        //参与随机
 
-                    left = right;
+                        int right = left + weight;
+
+                        if (rnd >= left && rnd < right)
+                        {
+                            storeName = item.Name;
+                            break;
+                        }
+
+                        left = right;
+                    }
                 }
 
                 if (storeName == null)
                 {
-                    storeName = setting.Config.Stores[setting.Config.Stores.Count - 1].Name;
+                    storeName = setting.Config.Stores[0].Name;
                 }
             }
 
@@ -107,7 +117,7 @@ namespace PageCache.Setting
         }
 
 
-   
+
 
 
     }

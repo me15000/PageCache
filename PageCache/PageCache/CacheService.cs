@@ -507,7 +507,7 @@ namespace PageCache
         }
 
 
-        const int CHUNKED_SIZE = 1024 * 128;
+        const int CHUNKED_SIZE = 1024 * 1024 * 2;
 
         bool EchoData(HttpContext context, Store.StoreData data)
         {
@@ -600,7 +600,7 @@ namespace PageCache
 
                 }
                 else
-                {
+                {                    
                     response.BinaryWrite(bodyData);
                 }
             }
@@ -659,41 +659,35 @@ namespace PageCache
         //输出浏览器缓存
         bool EchoClientCache(HttpContext context, int cacheSeconds)
         {
-            bool browserCacheNotExpired = false;
-            string if_modified_since = null;
+
+            bool succ = false;
 
             try
             {
-                if_modified_since = context.Request.Headers["If-Modified-Since"] ?? string.Empty;
-            }
-            catch (Exception ex)
-            {
-                if (ErrorLog != null)
-                {
-                    ErrorLog.Write(context.Request.RawUrl + "\r\n" + ex.ToString());
-                }
-            }
+                string if_modified_since = context.Request.Headers["If-Modified-Since"] ?? string.Empty;
 
-            if (!string.IsNullOrEmpty(if_modified_since))
-            {
-                DateTime if_date;
-                if (DateTime.TryParse(if_modified_since, out if_date))
+                if (!string.IsNullOrEmpty(if_modified_since))
                 {
-                    if (if_date.AddSeconds(cacheSeconds) > DateTime.Now)
+                    DateTime if_date;
+                    if (DateTime.TryParse(if_modified_since, out if_date))
                     {
-                        browserCacheNotExpired = true;
+                        if (if_date.AddSeconds(cacheSeconds) > DateTime.Now)
+                        {
+                            context.Response.StatusCode = (int)System.Net.HttpStatusCode.NotModified;
+                            context.Response.StatusDescription = "from PageCache";
+
+                            succ = true;
+                        }
                     }
                 }
-            }
 
-            if (browserCacheNotExpired)
+            }
+            catch
             {
-                context.Response.StatusCode = (int)System.Net.HttpStatusCode.NotModified;
-                context.Response.StatusDescription = "from PageCache";
-                return true;
+
             }
 
-            return false;
+            return succ;
         }
 
 

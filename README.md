@@ -10,47 +10,17 @@
 
 
 
-> 通过不断的测试 日志分析 用户反馈，PageCache 已经发展到第五个版本，
 > 目前已经稳定运行在生产环境中。
 
 
 
 
-- PageCache 新特性
-- PageCache 简要说明
-- PageCache 可以带来的好处
-- PageCache 详细说明
-- PageCache 原理
-- PageCache 怎么使用
-
-## PageCache 新特性 ##
-
-- 新增存储队列，把要存储到磁盘上的内容先写入内存缓冲区，到达一定的数量之后一次性写入磁盘，减少磁盘IO
-- 新增读取队列，把最新从磁盘中读取的内容加入内存缓冲区，当再次有进程读取时，不用从磁盘读，减少磁盘IO
-- 新增SQLite 存储器，使用本地文件和磁盘来保存缓存内容，减少网络开销和维护成本
-- 当老缓存过期要创建新缓存的时候，可选两种模式  
-1. 优先输出老缓存，异步创建新缓存 【可以让用户更快的浏览页面，但是内容不是最新的】
-2. 优先创建新缓存，如果创建失败输出老缓存 【可能网站访问用户会有卡顿，网站访问用户越多，卡顿几率越小】
-- 程序结构优化
-
 
 ## PageCache 简要说明 ##
 
-顾名思义 PageCache 是用来缓存网页的 ，如 php 页面、 html、 asp页面、asp.net 页面等等，也可以缓存图片、css、js 等
+顾名思义 PageCache 是一种缓存技术 ，是相对传统生成静态HTML的替代方式，更节约时间，只用制作好动态页面，然后用PageCache 映射好路径，即可生成静态HTML。
+从而提升开发效率和网站性能。
 
-可以用来做反向代理服务器
-
-功能有点类似CDN
-
-
-## PageCache可以带来的好处 ##
-
-*   PageCache 可以在不修改源代码的情况下，将动态页面模拟为静态页面，提升网页打开速度，增强用户体验
-*   PageCache  支持gzip压缩和分片，将源页面压缩为gzip 发送给用户，减小网页的体积，节约带宽 增强用户体验
-*   PageCache 可以自动计算出 用户频繁访问的页面，将此页面放入内存，减少磁盘读写，提升网站的并发性能
-*   PageCache 有很强的可伸缩性，可以创建多个节点，多个存储来进一步提升网站性能 ，支持负载均衡
-*   使用PageCache 可以让注重网站性能的用户，不再为性能而做过多的工作，从而提升工作效率，降低产品开发周期，让开发者更关注需求本身
-*   如果网站使用 dnspod 解析多台服务器，架构多台PageCache服务器，基本上可以做到类似 CDN页面加速功能，为项目节约成本	
 
 
 
@@ -63,8 +33,6 @@
 为了解决性能问题，传统解决方案：
 
 - 生成静态HTML
-- 使用Redis or memcached 等其它缓存软件
-
 
 【生成静态HTML】优点
 
@@ -77,33 +45,11 @@
 
 
 【生成静态HTML】缺点
-
-1. 因为如果网站要生成静态HTML，网站就要有写入权限，有写入权限对网站来说是很不安全的
-2. 生成静态HTML 在程序实现上有诸多不便，严重影响开发效率，耽误产品开发进度
-3. 网站频繁修改、网站数据量上十万 二十万的情况下、网站有成千上万上几十万上百万个页面构成，生成静态HTML 非常耗时麻烦
-4. 网站迁移备份由于目录中静态HTML 太多，需要打包网络传输过去 这个过程是很麻烦很漫长的	
-
-
-【使用 Redis or memcached】
-
-
-
-在使用 Redis 或者 memcached 这些软件的时候
-
-程序上要多一层，会增加开发周期，会增加维护成本
-
-因为Redis 或 memcached 和 程序的耦合性比较大
-
-会导致程序员的工作量增加
-
-
-> Redis 或 memcached 在项目中的角色：
-> 
-> 程序第一次读数据的时候 ，首先要从**数据库**中取出数据，然后把数据存储到 Redis 或 memcached 中，并设置过期时间
-> 
-> 第二次再去读数据的时候，就直接从 memcached 或 redis 中读数据，不用直接再从数据库中读数据
-> 
-> 当memcached 或 redis 中的数据过期的时候，再重复上述的步骤
+1. 生成静态HTML需要用模板和专门的动态页面程序替换的方式，相对于动态页面来说，这样的编写过程太麻烦了，也不够直观。
+2. 当网站大的时候，需要用计划任务或者手工去生成，列表页有成千上几十万的页面，生成的时候麻烦又费时。
+3. 改版或调整页面，也需要重新生成。
+4. 日积月累，网站体积硕大无比，垃圾页面残留页面数不胜数。
+5. 迁移网站麻烦至极
 
 
 
@@ -116,7 +62,6 @@
 
 - PageCache 有良好的存储引擎扩展机制，可以指定规则使用多种不同的存储引擎 解决性能问题
 
-- PageCache 独立于应用程序，降低程序耦合性，程序员不用使用 redis memcached 等中间件，更关注程序逻辑提升工作效率
 
 
 
@@ -125,15 +70,15 @@
 ## PageCache原理 ##
 
 
+PageCache 在用户请求的时候去生成静态HTML
+
 PageCache 将动态页面执行的结果保存了起来，并指定过期时间，到了过期时间之后，再重新获得动态页面的结果，
 
 在缓存没有过期之前，用户访问的都是这个缓存的结果，这样就可以提升网站的性能，不用再去手工生成页面
 
-PageCache可以设定使用内存缓存，自动计算出哪些缓存被频繁访问，然后把这个缓存 放入到内存中，这样可以减少磁盘IO，从而更进一步提升性能
-
 PageCache 通过Http形式获得动态页面的执行结果，这样意味着，动态页面可以放在本地服务器，也可以放在远程，也可以架构多台动态页面服务器，提升性能
 
-PageCache 并不直接把数据放到存储引擎里面，而是缓存到一个内存列表中，当列表中元素数量达到设定值之后，再写入存储引擎中，从而提升存储引擎的性能
+PageCache 并不直接把数据放到存储引擎里面，而是缓存到一个内存列表中，当列表中元素数量达到设定值之后，再写入存储引擎中，从而提升性能
 
 
 
@@ -149,16 +94,17 @@ PageCache 基于.net 开发，所以 PageCache 需要依赖微软 .net framework
 PageCache要用到的文件
 
 - PageCache.dll 主程序
-- PageCache.Store.xxxxxxx.dll 存储器程序
 - PageCache.config   配置文件 
 - Web.config  配置文件
 
 
 
 存储器可以有多种选择，也可以定制、默认PageCache自带的存储器有
- 
+- DiskStore存储器(已内置)  磁盘缓存
+- DiskOStore存储器(已内置) 磁盘永久缓存，适用于不再更新的页面，和DiskStore存储器有区别
+- SQLServer存储器(已内置) SQLServer存储器
+
 - MySql存储器(PageCache.Store.MySql.dll)
-- SQLServer存储器(PageCache.Store.SQLServer.dll)
 - MongoDB存储器(PageCache.Store.MongoDB.dll)
 
 存储器实现了接口 PageCache.Store.IStore 接口，用户需要定制存储器可以实现这个接口，
@@ -221,20 +167,17 @@ PageCache要用到的文件
 	  这里
 	  -->
 	  <stores>
-	
-	    <!--<store name="db1" weight="50" connectionString="Server=localhost;Database=pagecache;Uid=root;Pwd=123456;" assemblyName="PageCache.Store.MySql, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a91d1f4aebf531e6" fullTypeName="PageCache.Store.MySql.MySqlStore" />-->
-	
-	
+		
 	    <!--
-	    sqlite  存储器
+	    DiskStore  存储器
 	    name    是存储器的唯一标示
 	    weight  权重，当有多个存储器的时候有效，数值在 0-100之间，表示访问到此存储器的几率
-	    connectionString 是链接字符串，这里是sqlite 存储器，使用的是文件所在路径
-	    assemblyName    是程序集的强名称
+	    connectionString 是链接字符串，这里是DiskStore 存储器，使用的是文件所在路径
 	    fullTypeName    是类型名称
 	    -->
-	    <store name="db2" weight="100" connectionString="H:\PageCache" assemblyName="PageCache.Store.SQLite, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a91d1f4aebf531e6" fullTypeName="PageCache.Store.SQLite.SQLiteStore" />
-	
+	    <store name="store1" weight="30" connectionString="H:\PageCache\" fullTypeName="PageCache.Store.Disk.DiskStore" />
+		<store name="store2" weight="70" connectionString="I:\PageCache\" fullTypeName="PageCache.Store.Disk.DiskStore" />
+
 	
 	  </stores>
 	
@@ -287,8 +230,9 @@ PageCache要用到的文件
 	    action  映射到的相对地址
 	    host    对应的源主机标示，默认default   对应节点 pageCache > hosts > host[name=default]
 	    cacheSeconds  缓存时长（秒）
+		createFirst 创建优先
 	    -->
-	    <rule name="test" match="test(\d+)" action="/default.aspx" host="default" cacheSeconds="600">
+	    <rule name="test" match="test(\d+)" action="/default.aspx" host="default" cacheSeconds="600" createFirst="false">
 	      <!--
 	      此 url 需要接收的参数      
 	      type 标示类型，可以使 GET POST HEADER 
@@ -307,3 +251,11 @@ PageCache要用到的文件
 	
 	  </rules>
 	</pageCache>
+	
+	
+	
+	
+	
+	
+	
+	详情可联系 QQ：121308030

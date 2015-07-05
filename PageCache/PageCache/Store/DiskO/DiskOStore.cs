@@ -1,19 +1,17 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 
-namespace PageCache.Store.Disk
+namespace PageCache.Store.DiskO
 {
-    public class DiskStore : IStore
+    public class DiskOStore : IStore
     {
         string rootpath = null;
-        BinaryFormatter binaryFormatter = new BinaryFormatter();
 
-        public DiskStore(string path)
+        public DiskOStore(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
-                throw new Exception("DiskStore: path is null ");
+                throw new Exception("DiskOStore: path is null ");
             }
 
             this.rootpath = path;
@@ -28,7 +26,7 @@ namespace PageCache.Store.Disk
             }
             catch (Exception ex)
             {
-                throw new Exception("DiskStore: Directory not exists " + path + "\r\n" + ex.Message);
+                throw new Exception("DiskOStore: Directory not exists " + path + "\r\n" + ex.Message);
             }
         }
 
@@ -44,11 +42,14 @@ namespace PageCache.Store.Disk
             return path;
         }
 
+
         public bool Exists(string type, string key)
         {
             string path = GetCacheFilePath(type, key);
+            string head_path = path + ".head";
+            string body_path = path + ".body";
 
-            if (File.Exists(path))
+            if (File.Exists(head_path) && File.Exists(body_path))
             {
                 return true;
             }
@@ -56,16 +57,17 @@ namespace PageCache.Store.Disk
             return false;
         }
 
-        public void Save(StoreData data)
+        bool SaveFile(string folder, string path, byte[] data)
         {
-            string cache_path = GetCacheFilePath(data.Type, data.Key);
+
+            string cache_path = path;
+
             string old_path = cache_path + ".old";
             string new_path = cache_path + ".new." + (new Random().Next(9999));
 
             bool exists_cache = false;
             if (!File.Exists(cache_path))
             {
-                string folder = GetCacheFileDirectory(data.Type, data.Key);
 
                 if (!Directory.Exists(folder))
                 {
@@ -77,12 +79,13 @@ namespace PageCache.Store.Disk
                 exists_cache = true;
             }
 
+            bool succ = false;
 
             try
             {
                 using (var fs = File.Create(new_path, 1024 * 256, FileOptions.RandomAccess))
                 {
-                    binaryFormatter.Serialize(fs, data);
+                    fs.Write(data, 0, data.Length);
                     fs.Close();
                     fs.Dispose();
                 }
@@ -99,6 +102,7 @@ namespace PageCache.Store.Disk
 
                 File.Move(new_path, cache_path);
 
+                succ = true;
             }
             catch (Exception ex)
             {
@@ -117,39 +121,79 @@ namespace PageCache.Store.Disk
                 }
             }
 
+            return succ;
+        }
+
+
+        byte[] ReadFile(string path)
+        {
+            if (File.Exists(path))
+            {
+                return File.ReadAllBytes(path);
+            }
+
+            return null;
+        }
+
+        public void Save(StoreData data)
+        {
+            string path = GetCacheFilePath(data.Type, data.Key);
+
+            string head_path = path + ".head";
+            string body_path = path + ".body";
+
+            string folder = GetCacheFileDirectory(data.Type, data.Key);
+
+            SaveFile(folder, head_path, data.HeadersData);
+            SaveFile(folder, body_path, data.BodyData);
+
+
         }
 
         public StoreData GetData(string type, string key)
         {
+            string path = GetCacheFilePath(type, key);
+
+            string head_path = path + ".head";
+            string body_path = path + ".body";
+
+
             StoreData data = null;
-            string cache_path = GetCacheFilePath(type, key);
-            if (File.Exists(cache_path))
+            var data_head = ReadFile(head_path);
+            if (data_head != null)
             {
-                using (var fs = File.Open(cache_path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                var data_body = ReadFile(body_path);
+                if (data_body != null)
                 {
-                    object cacheObject = binaryFormatter.Deserialize(fs);
-
-                    if (cacheObject != null)
-                    {
-                        data = cacheObject as StoreData;
-                    }
-
-                    fs.Close();
-                    fs.Dispose();
+                    data = new StoreData();
+                    data.BodyData = data_body;
+                    data.CreatedDate = new DateTime(2000, 1, 1);
+                    data.ExpiresAbsolute = DateTime.Today.AddYears(10);
+                    data.HeadersData = data_head;
+                    data.Key = key;
+                    data.Seconds = Convert.ToInt32((data.ExpiresAbsolute - data.CreatedDate).TotalSeconds);
+                    data.Type = type;
                 }
             }
-
 
             return data;
         }
 
         public void Delete(string type, string key)
         {
-            string cache_path = GetCacheFilePath(type, key);
+            string path = GetCacheFilePath(type, key);
 
-            if (File.Exists(cache_path))
+            string head_path = path + ".head";
+            string body_path = path + ".body";
+
+            if (File.Exists(head_path))
             {
-                File.Delete(cache_path);
+                File.Delete(head_path);
+            }
+
+            if (File.Exists(body_path))
+            {
+                File.Delete(body_path);
             }
         }
     }

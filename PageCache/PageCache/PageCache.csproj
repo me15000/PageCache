@@ -59,6 +59,7 @@
     <Compile Include="Setting\Rules.cs" />
     <Compile Include="Setting\Setting.cs" />
     <Compile Include="Setting\Stores.cs" />
+    <Compile Include="Store\DiskO\DiskOStore.cs" />
     <Compile Include="Store\Factory.cs" />
     <Compile Include="Store\Disk\DiskStore.cs" />
     <Compile Include="Store\IStore.cs" />
